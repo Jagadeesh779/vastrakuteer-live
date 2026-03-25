@@ -1,0 +1,120 @@
+[
+  {
+    "fullName": "Bollepalli Jagadeesh",
+    "email": "bollepallijagadeesh@gmail.com",
+    "password": "jazzs",
+    "role": "user",
+    "_id": "1769181095828",
+    "createdAt": "2026-01-23T15:11:35.828Z"
+  },
+  {
+    "fullName": "Anusha ",
+    "email": "Anusha.vastraKuteer@gmail.com",
+    "password": "anu123",
+    "role": "user",
+    "_id": "1770347995544",
+    "createdAt": "2026-02-06T03:19:55.544Z",
+    "favorites": []
+  },
+  {
+    "fullName": "Vastra Admin",
+    "email": "admin@vastrakuteer.com",
+    "password": "admin123",
+    "role": "admin",
+    "_id": "admin_static_id",
+    "createdAt": "2026-02-20T13:03:07.949Z",
+    "favorites": [
+      "1770788438432"
+    ]
+  },
+  {
+    "fullName": "sankarr",
+    "email": "sankarr@gmail.com",
+    "password": "123456",
+    "role": "user",
+    "_id": "1770742344712",
+    "createdAt": "2026-02-10T16:52:24.712Z",
+    "favorites": []
+  },
+  {
+    "fullName": "Sanjeev",
+    "email": "sanjeev@gmail.com",
+    "password": "sanjeev12",
+    "role": "user",
+    "_id": "1771263251021",
+    "createdAt": "2026-02-16T17:34:11.022Z"
+  },
+  {
+    "fullName": "Test User",
+    "email": "testuser_unique_123@example.com",
+    "password": "password123",
+    "role": "user",
+    "_id": "1771394244517",
+    "createdAt": "2026-02-18T05:57:24.517Z"
+  },
+  {
+    "fullName": "Karthik",
+    "email": "karthik@gmail.com",
+    "password": "0987654",
+    "role": "user",
+    "_id": "1771395175240",
+    "createdAt": "2026-02-18T06:12:55.240Z"
+  },
+  {
+    "fullName": "ChandraCh",
+    "email": "csrch99@gmail.com",
+    "password": "Basis@2026",
+    "role": "user",
+    "_id": "1771761537346",
+    "createdAt": "2026-02-22T11:58:57.347Z"
+  },
+  {
+    "fullName": "madhu",
+    "email": "jmbphy@gmail.com",
+    "password": "Curie@999",
+    "role": "user",
+    "_id": "1771763688538",
+    "createdAt": "2026-02-22T12:34:48.539Z"
+  },
+  {
+    "fullName": "yashwanth",
+    "email": "puligillayashwanth776@gmail.com",
+    "password": "Puligilla@11",
+    "role": "user",
+    "_id": "1772000929511",
+    "createdAt": "2026-02-25T06:28:49.512Z",
+    "favorites": []
+  },
+  {
+    "fullName": "bhavish",
+    "email": "2320030187@klh.edu.in",
+    "password": "9030066240",
+    "role": "user",
+    "_id": "1772078810186",
+    "createdAt": "2026-02-26T04:06:50.187Z"
+  },
+  {
+    "fullName": "",
+    "email": "",
+    "password": "",
+    "role": "user",
+    "_id": "1772790495844",
+    "createdAt": "2026-03-06T09:48:15.846Z"
+  },
+  {
+    "fullName": "Mobile Tester",
+    "email": "mobile@test.com",
+    "password": "Password123!",
+    "role": "user",
+    "_id": "1773641251252",
+    "createdAt": "2026-03-16T06:07:31.266Z"
+  },
+  {
+    "fullName": "Test User",
+    "email": "testmobile@example.com",
+    "password": "Password123!",
+    "role": "user",
+    "_id": "1773641641139",
+    "createdAt": "2026-03-16T06:14:01.139Z"
+  }
+]

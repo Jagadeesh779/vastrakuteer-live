@@ -1,0 +1,33 @@
+[
+  {
+    "brand": "Vastra Kuteer",
+    "name": "Saree",
+    "price": 1,
+    "originalPrice": 1,
+    "image": "http://localhost:5000/uploads/1773207271239-847516843.jpeg",
+    "images": [
+      "http://localhost:5000/uploads/1773207282315-448153577.png"
+    ],
+    "category": "Sarees",
+    "description": "",
+    "material": "Cotton",
+    "pattern": "Mal Mal",
+    "occasion": "Daily wear",
+    "countryOfOrigin": "India",
+    "weavingRegion": "Jaipur",
+    "fabricCare": "",
+    "isHandloom": true,
+    "showOnHome": false,
+    "showOnShop": true,
+    "showOnCollections": true,
+    "rating": 4.5,
+    "reviews": 0,
+    "count": 1,
+    "sizes": {
+      "Saree": 0
+    },
+    "productCode": "JP011",
+    "_id": "1773207285990",
+    "isSoldOut": false
+  }
+]
