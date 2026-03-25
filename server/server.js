@@ -41,10 +41,7 @@ mongoose.connect(process.env.MONGODB_URI)
         console.log('Running in MOCK MODE due to DB connection failure.');
     });
 
-// Basic Route
-app.get('/', (req, res) => {
-    res.send('Vastra Kuteer API is Running');
-});
+// Basic Route removed to allow React Frontend to serve on '/'
 
 // Import Routes
 const authRoutes = require('./routes/auth');
