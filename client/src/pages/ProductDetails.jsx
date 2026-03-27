@@ -126,7 +126,7 @@ const ProductDetails = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                     {/* Image Section */}
-                    <div className="space-y-4">
+                    <div className="space-y-4 w-full mx-auto md:ml-auto md:mr-0" style={{ maxWidth: '450px' }}>
                         {/* Main Image Viewer */}
                         <div className="relative">
                             <ImageZoom src={mainImage} alt={product.name} />
@@ -186,67 +186,67 @@ const ProductDetails = () => {
 
                         {/* Size Selection — hidden for saree-only products */}
                         {product.sizes && Object.values(product.sizes).some(qty => qty > 0) &&
-                         !(Object.entries(product.sizes).filter(([, qty]) => qty > 0).map(([s]) => s).join('') === 'Saree') && (
-                            <div className="mb-6">
-                                <div className="flex justify-between items-center mb-2">
-                                    <h3 className="text-sm font-medium text-gray-900">Select Size</h3>
-                                    <button
-                                        onClick={() => setIsSizeGuideOpen(true)}
-                                        className="text-vastra-teal text-xs font-semibold hover:underline flex items-center"
-                                    >
-                                        <Ruler className="h-3 w-3 mr-1" /> Size Guide
-                                    </button>
-                                </div>
-                                <div className="flex space-x-3">
-                                    {['S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Saree'].map((size) => {
-                                        // 1. Get total stock for this size
-                                        const totalStock = product.sizes ? product.sizes[size] : 0;
+                            !(Object.entries(product.sizes).filter(([, qty]) => qty > 0).map(([s]) => s).join('') === 'Saree') && (
+                                <div className="mb-6">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h3 className="text-sm font-medium text-gray-900">Select Size</h3>
+                                        <button
+                                            onClick={() => setIsSizeGuideOpen(true)}
+                                            className="text-vastra-teal text-xs font-semibold hover:underline flex items-center"
+                                        >
+                                            <Ruler className="h-3 w-3 mr-1" /> Size Guide
+                                        </button>
+                                    </div>
+                                    <div className="flex space-x-3">
+                                        {['S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Saree'].map((size) => {
+                                            // 1. Get total stock for this size
+                                            const totalStock = product.sizes ? product.sizes[size] : 0;
 
-                                        // 2. Get quantity of this specific item (id + size) already in cart
-                                        const cartItem = cartItems.find(item => item._id === product._id && item.selectedSize === size);
-                                        const qtyInCart = cartItem ? cartItem.quantity : 0;
+                                            // 2. Get quantity of this specific item (id + size) already in cart
+                                            const cartItem = cartItems.find(item => item._id === product._id && item.selectedSize === size);
+                                            const qtyInCart = cartItem ? cartItem.quantity : 0;
 
-                                        // 3. Calculate remaining availability
-                                        const availableForUser = Math.max(0, totalStock - qtyInCart);
-                                        const isAvailable = availableForUser > 0;
+                                            // 3. Calculate remaining availability
+                                            const availableForUser = Math.max(0, totalStock - qtyInCart);
+                                            const isAvailable = availableForUser > 0;
 
-                                        return (
-                                            <button
-                                                key={size}
-                                                onClick={() => isAvailable && setSelectedSize(size)}
-                                                disabled={!isAvailable}
-                                                className={`
+                                            return (
+                                                <button
+                                                    key={size}
+                                                    onClick={() => isAvailable && setSelectedSize(size)}
+                                                    disabled={!isAvailable}
+                                                    className={`
                                                     ${size === 'Saree' ? 'px-3 h-10 rounded-lg' : 'w-10 h-10 rounded-full'} flex items-center justify-center border text-sm font-medium transition-colors
                                                     ${selectedSize === size
-                                                        ? 'border-vastra-teal bg-vastra-teal text-white'
-                                                        : isAvailable
-                                                            ? 'border-gray-200 text-gray-900 hover:border-gray-300'
-                                                            : 'border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50 diagonal-strike'
-                                                    }
+                                                            ? 'border-vastra-teal bg-vastra-teal text-white'
+                                                            : isAvailable
+                                                                ? 'border-gray-200 text-gray-900 hover:border-gray-300'
+                                                                : 'border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50 diagonal-strike'
+                                                        }
                                                 `}
-                                                title={isAvailable ? `${availableForUser} left` : 'Out of Stock (in cart/sold out)'}
-                                            >
-                                                {size}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                                {selectedSize && (
-                                    <p className="text-sm text-green-600 mt-2">
-                                        {(() => {
-                                            const totalStock = product.sizes ? product.sizes[selectedSize] : 0;
-                                            const cartItem = cartItems.find(item => item._id === product._id && item.selectedSize === selectedSize);
-                                            const qtyInCart = cartItem ? cartItem.quantity : 0;
-                                            const remaining = Math.max(0, totalStock - qtyInCart);
+                                                    title={isAvailable ? `${availableForUser} left` : 'Out of Stock (in cart/sold out)'}
+                                                >
+                                                    {size}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    {selectedSize && (
+                                        <p className="text-sm text-green-600 mt-2">
+                                            {(() => {
+                                                const totalStock = product.sizes ? product.sizes[selectedSize] : 0;
+                                                const cartItem = cartItems.find(item => item._id === product._id && item.selectedSize === selectedSize);
+                                                const qtyInCart = cartItem ? cartItem.quantity : 0;
+                                                const remaining = Math.max(0, totalStock - qtyInCart);
 
-                                            if (remaining === 0) return <span className="text-red-500">Max limit reached (check cart)</span>;
-                                            if (remaining < 5) return `Hurry! Only ${remaining} left in ${selectedSize}.`;
-                                            return `In Stock`;
-                                        })()}
-                                    </p>
-                                )}
-                            </div>
-                        )}
+                                                if (remaining === 0) return <span className="text-red-500">Max limit reached (check cart)</span>;
+                                                if (remaining < 5) return `Hurry! Only ${remaining} left in ${selectedSize}.`;
+                                                return `In Stock`;
+                                            })()}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
 
                         {/* Actions */}
                         <div className="space-y-3 max-w-sm">
