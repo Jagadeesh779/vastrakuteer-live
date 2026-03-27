@@ -4,7 +4,7 @@ const ZOOM_SCALE = 1.85; // How much to zoom in — adjust as needed
 
 const ImageZoom = ({ src, alt }) => {
     const [transformOrigin, setTransformOrigin] = useState('50% 50%');
-    const [isHovered, setIsHovered] = useState(false);
+    const [isZoomed, setIsZoomed] = useState(false);
     const imgRef = useRef(null);
 
     const handleMouseMove = (e) => {
@@ -17,9 +17,9 @@ const ImageZoom = ({ src, alt }) => {
 
     return (
         <div
-            className="relative overflow-hidden rounded-2xl bg-gray-100 cursor-zoom-in group aspect-[4/5]"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            className={`relative overflow-hidden rounded-2xl bg-gray-100 group aspect-[4/5] ${isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
+            onClick={() => setIsZoomed(!isZoomed)}
+            onMouseLeave={() => setIsZoomed(false)}
             onMouseMove={handleMouseMove}
             ref={imgRef}
         >
@@ -28,9 +28,9 @@ const ImageZoom = ({ src, alt }) => {
                 alt={alt}
                 className="w-full h-full object-cover"
                 style={{
-                    transform: isHovered ? `scale(${ZOOM_SCALE})` : 'scale(1)',
+                    transform: isZoomed ? `scale(${ZOOM_SCALE})` : 'scale(1)',
                     transformOrigin: transformOrigin,
-                    transition: isHovered
+                    transition: isZoomed
                         ? 'transform 0.15s ease-out'
                         : 'transform 0.3s ease-out',
                     willChange: 'transform',
@@ -38,9 +38,9 @@ const ImageZoom = ({ src, alt }) => {
             />
 
             {/* Zoom hint */}
-            {!isHovered && (
+            {!isZoomed && (
                 <div className="absolute bottom-4 right-4 bg-black/30 backdrop-blur-md text-white text-[10px] uppercase tracking-widest px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                    Roll over to zoom
+                    Click to zoom
                 </div>
             )}
         </div>
