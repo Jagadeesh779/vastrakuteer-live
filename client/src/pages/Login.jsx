@@ -10,8 +10,13 @@ import './Login.css';
 
 const Login = () => {
     const [formData, setFormData] = useState({ email: '', password: '' });
+    const [loginMethod, setLoginMethod] = useState('password'); // 'password' or 'otp'
+    const [otpSent, setOtpSent] = useState(false);
+    const [otp, setOtp] = useState('');
+    const [loadingOtp, setLoadingOtp] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -23,15 +28,37 @@ const Login = () => {
     const handleChange = (e) =>
         setFormData({ ...formData, [e.target.name]: e.target.value });
 
+    const handleSendOTP = async () => {
+        if (!formData.email) return setError('Please enter your email first.');
+        setError('');
+        setLoadingOtp(true);
+        try {
+            await axios.post(`${API_URL}/api/auth/send-login-otp`, { email: formData.email });
+            setOtpSent(true);
+            setSuccessMsg('OTP sent to your email!');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to send OTP. User may not exist.');
+        } finally {
+            setLoadingOtp(false);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setSuccessMsg('');
         try {
-            const res = await axios.post(`${API_URL}/api/auth/login`, formData);
+            let res;
+            if (loginMethod === 'password') {
+                res = await axios.post(`${API_URL}/api/auth/login`, formData);
+            } else {
+                if (!otp) return setError('Please enter the OTP.');
+                res = await axios.post(`${API_URL}/api/auth/login-otp`, { email: formData.email, otp });
+            }
+
             if (res.data.token) localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
             
-            // Track if it's a brand new user
             if (res.data.isNewUser) {
                 sessionStorage.setItem('isNewUser', 'true');
             }
@@ -57,7 +84,6 @@ const Login = () => {
                 if (backendRes.data.token) localStorage.setItem('token', backendRes.data.token);
                 localStorage.setItem('user', JSON.stringify(backendRes.data.user));
                 
-                // Track if it's a brand new user from Google
                 if (backendRes.data.isNewUser) {
                     sessionStorage.setItem('isNewUser', 'true');
                 }
@@ -95,18 +121,31 @@ const Login = () => {
                     {/* Heading */}
                     <div className="login-card-header">
                         <h2>Login <span className="text-teal">Portal</span></h2>
-                        <p>Enter your credentials to access your account</p>
+                        <p>{loginMethod === 'password' ? 'Enter your credentials to access your account' : 'Verify your email to login securely'}</p>
                     </div>
 
-                    {/* Error banner */}
-                    {error && (
-                        <div className="login-error-alert">
-                            {error}
-                        </div>
-                    )}
+                    {/* Method Toggle */}
+                    <div className="login-method-toggle">
+                        <button 
+                            className={`toggle-tab ${loginMethod === 'password' ? 'active' : ''}`}
+                            onClick={() => { setLoginMethod('password'); setOtpSent(false); setError(''); }}
+                        >
+                            Password
+                        </button>
+                        <button 
+                            className={`toggle-tab ${loginMethod === 'otp' ? 'active' : ''}`}
+                            onClick={() => { setLoginMethod('otp'); setError(''); }}
+                        >
+                            OTP Login
+                        </button>
+                    </div>
+
+                    {/* Feedback Banners */}
+                    {error && <div className="login-error-alert">{error}</div>}
+                    {successMsg && <div className="login-success-alert">{successMsg}</div>}
 
                     <form onSubmit={handleSubmit} className="login-form">
-                        {/* Email Input */}
+                        {/* Email Input (Always Shown) */}
                         <div className="input-group">
                             <span className="input-icon">
                                 <Mail size={16} />
@@ -120,56 +159,97 @@ const Login = () => {
                                 placeholder="Email address"
                                 value={formData.email}
                                 onChange={handleChange}
+                                disabled={otpSent && loginMethod === 'otp'}
                             />
                         </div>
 
-                        {/* Password Input */}
-                        <div className="input-group">
-                            <span className="input-icon">
-                                <Lock size={16} />
-                            </span>
-                            <input
-                                className="styled-input"
-                                id="password"
-                                name="password"
-                                type={showPassword ? 'text' : 'password'}
-                                required
-                                placeholder="Password"
-                                value={formData.password}
-                                onChange={handleChange}
-                            />
-                            <button
-                                type="button"
-                                className="password-toggle-btn"
-                                onClick={() => setShowPassword(!showPassword)}
+                        {/* Password Input (Method: Password) */}
+                        {loginMethod === 'password' && (
+                            <div className="input-group">
+                                <span className="input-icon">
+                                    <Lock size={16} />
+                                </span>
+                                <input
+                                    className="styled-input"
+                                    id="password"
+                                    name="password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    required
+                                    placeholder="Password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                />
+                                <button
+                                    type="button"
+                                    className="password-toggle-btn"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                </button>
+                            </div>
+                        )}
+
+                        {/* OTP Input (Method: OTP, If Sent) */}
+                        {loginMethod === 'otp' && otpSent && (
+                            <div className="input-group">
+                                <span className="input-icon">
+                                    <ShieldCheck size={16} />
+                                </span>
+                                <input
+                                    className="styled-input"
+                                    name="otp"
+                                    type="text"
+                                    maxLength="6"
+                                    required
+                                    placeholder="Enter 6-digit OTP"
+                                    value={otp}
+                                    onChange={(e) => setOtp(e.target.value)}
+                                />
+                                <button
+                                    type="button"
+                                    className="password-toggle-btn text-teal-small"
+                                    onClick={() => setOtpSent(false)}
+                                >
+                                    Edit Email
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Options (Only for Password) */}
+                        {loginMethod === 'password' && (
+                            <div className="form-options">
+                                <label className="checkbox-wrap">
+                                    <input type="checkbox" />
+                                    <span>Remember me</span>
+                                </label>
+                                <Link to="/forgot-password" self className="forgot-pw">Forgot password?</Link>
+                            </div>
+                        )}
+
+                        {/* Action Buttons */}
+                        {loginMethod === 'otp' && !otpSent ? (
+                            <button 
+                                type="button" 
+                                className="btn-solid-teal" 
+                                onClick={handleSendOTP}
+                                disabled={loadingOtp}
                             >
-                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                {loadingOtp ? 'Sending...' : 'Send OTP to Email'}
+                                <ArrowRight size={16} />
                             </button>
-                        </div>
+                        ) : (
+                            <button type="submit" className="btn-solid-teal">
+                                <LogIn size={16} />
+                                {loginMethod === 'password' ? 'Sign In' : 'Verify & Login'}
+                            </button>
+                        )}
 
-                        {/* Options */}
-                        <div className="form-options">
-                            <label className="checkbox-wrap">
-                                <input type="checkbox" />
-                                <span>Remember me</span>
-                            </label>
-                            <Link to="/forgot-password" className="forgot-pw">Forgot password?</Link>
-                        </div>
-
-                        {/* Submit Button */}
-                        <button type="submit" className="btn-solid-teal">
-                            <Lock size={16} />
-                            Sign In
-                        </button>
-
-                        {/* Divider */}
                         <div className="divider-wrap">
                             <div className="divider-line"></div>
                             <span className="divider-text">Or continue with</span>
                             <div className="divider-line"></div>
                         </div>
 
-                        {/* Google Login */}
                         <button
                             type="button"
                             className="btn-solid-teal google-btn teal-style"

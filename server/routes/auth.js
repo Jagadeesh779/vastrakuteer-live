@@ -12,6 +12,7 @@ const { getActiveEvent } = require('../utils/eventCalendar');
 
 // Global OTP Cache for pending registrations
 global.registerOTPs = global.registerOTPs || new Map();
+global.loginOTPs = global.loginOTPs || new Map();
 
 // Helper to send welcome email asynchronously (non-blocking)
 const sendWelcomeEmail = async (name, email) => {
@@ -262,6 +263,106 @@ router.post('/login', async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
+    }
+});
+
+// @route   POST /api/auth/send-login-otp
+// @desc    Generate and email an OTP for secure login
+// @access  Public
+router.post('/send-login-otp', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ message: 'Email is required' });
+
+        // Check if user exists (vital for login)
+        let user;
+        if (mongoose.connection.readyState !== 1) {
+            user = findUserByEmail(email);
+        } else {
+            user = await User.findOne({ email });
+        }
+
+        if (!user) {
+            return res.status(404).json({ message: 'No account found with this email' });
+        }
+
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Cache it for 5 minutes (shorter for login)
+        global.loginOTPs.set(email, { otp, expires: Date.now() + 5 * 60 * 1000 });
+
+        // Setup Nodemailer
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        const mailOptions = {
+            from: `"Vastra Kuteer" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Vastra Kuteer Login OTP',
+            html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+                    <h2 style="color: #be185d; text-align: center;">Secure Login</h2>
+                    <p>Hello ${user.fullName},</p>
+                    <p>Your One-Time Password (OTP) for logging into Vastra Kuteer is:</p>
+                    <div style="background: #fdf2f8; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #be185d; border-radius: 5px; margin: 20px 0;">
+                        ${otp}
+                    </div>
+                    <p style="color: #666; font-size: 14px;">This code will expire in 5 minutes. If you did not request this code, please ignore this email.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                    <p style="text-align: center; color: #999; font-size: 12px;">© 2026 Vastra Kuteer. All rights reserved.</p>
+                   </div>`
+        };
+
+        await transporter.sendMail(mailOptions);
+        logDebug(`[LOGIN OTP SENT] ${email} - OTP: ${otp}`);
+        
+        res.json({ message: 'OTP sent to your email' });
+    } catch (err) {
+        logDebug(`[LOGIN OTP ERROR] ${err.message}`);
+        res.status(500).json({ message: 'Failed to send login OTP' });
+    }
+});
+
+// @route   POST /api/auth/login-otp
+// @desc    Verify OTP and log the user in
+// @access  Public
+router.post('/login-otp', async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        if (!email || !otp) return res.status(400).json({ message: 'Email and OTP are required' });
+
+        const cached = global.loginOTPs.get(email);
+        if (!cached) return res.status(400).json({ message: 'OTP expired or not requested' });
+
+        if (Date.now() > cached.expires) {
+            global.loginOTPs.delete(email);
+            return res.status(400).json({ message: 'OTP expired' });
+        }
+
+        if (cached.otp !== otp) {
+            return res.status(400).json({ message: 'Invalid OTP' });
+        }
+
+        // OTP Valid - Proceed to Login
+        global.loginOTPs.delete(email);
+
+        let user;
+        if (mongoose.connection.readyState !== 1) {
+            user = findUserByEmail(email);
+        } else {
+            user = await User.findOne({ email });
+        }
+
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        sendTokenResponse(user, 200, res, 'Login successful via OTP');
+    } catch (err) {
+        res.status(500).json({ message: 'OTP Login failed' });
     }
 });
 
