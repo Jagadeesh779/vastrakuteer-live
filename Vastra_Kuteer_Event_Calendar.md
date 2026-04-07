@@ -7,9 +7,10 @@
 | **Republic Day** 🇮🇳 | Jan 24 | Jan 27 | 20% | `REPUBLIC20` |
 | **Valentine's Day** 💕 | Feb 12 | Feb 15 | 20% | `VDAY20` |
 | **Holi** 🎨 | Mar 12 | Mar 16 | 20% | `HOLI20` |
-| **Ugadi / Tamil New Year** 🌸 | Mar 29 | Apr 2 | 20% | `UGADI20` |
-| **Eid al-Fitr** 🌙 | Mar 29 | Apr 3 | 20% | `EID20` |
-| **Ram Navami** 🪔 | Apr 15 | Apr 18 | 15% | `RAMNAVAMI15` |
+| **Ugadi** 🌸 | Mar 25 | Mar 29 | 20% | `UGADI20` |
+| **Rama Navami** 🪔 | Apr 5 | Apr 7 | 15% | `RAMNAVAMI15` |
+| **Vishu / Baisakhi** 🌾 | Apr 12 | Apr 16 | 20% | `HARVEST20` |
+| **Akshaya Tritiya** 🪙 | Apr 17 | Apr 22 | 20% | `AKSHAYA20` |
 | **Summer Sale** ☀️ | Apr 25 | Jun 20 | 15% | `SUMMER15` |
 | **Eid al-Adha** 🌙 | Jun 5 | Jun 10 | 20% | `EIDADHA20` |
 | **Raksha Bandhan** 🎀 | Aug 7 | Aug 11 | 15% | `RAKHI15` |
