@@ -5,6 +5,14 @@
  */
 
 /**
+ * Helper to convert {month, day} into a readable string (e.g. "Apr 13")
+ */
+const formatEventDate = (dateObj) => {
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','July','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[dateObj.month - 1]} ${dateObj.day}`;
+}
+
+/**
  * Generates a gorgeous Flash News email for upcoming event promotion.
  * @param {object} event  - Event object from eventCalendar.js
  * @param {string} name   - Recipient's name (or "Valued Customer")
@@ -39,8 +47,14 @@ const buildFlashEmail = (event, name = 'Valued Customer') => `
           <td style="padding:40px 40px 30px;text-align:center;">
             <div style="font-size:56px;margin-bottom:12px;">${event.emoji}</div>
             <h2 style="color:#1f2937;font-size:26px;margin:0 0 10px;">
-              ${event.name} is Tomorrow! 🎉
+              ${event.name} starts Tomorrow! 🎉
             </h2>
+
+            <!-- SALE DATE RANGE -->
+            <div style="display:inline-block;background:#FDE68A;color:#1e3a8a;border-radius:20px;padding:6px 20px;font-size:13px;font-weight:700;margin-bottom:24px;border:1px solid #1e3a8a;">
+              SALE PERIOD: ${formatEventDate(event.start)} to ${formatEventDate(event.end)}
+            </div>
+
             <p style="color:#6b7280;font-size:16px;line-height:1.6;margin:0 0 30px;">
               Dear ${name},<br><br>
               We are celebrating <strong>${event.name}</strong> with a special <strong>${event.discount}% OFF</strong> on our entire ethnic wear collection!<br>

@@ -165,7 +165,7 @@ const sendFlashSaleEmails = async (event) => {
             await transporter.sendMail({
                 from: `"Vastra Kuteer" <${process.env.EMAIL_USER}>`,
                 to: recipient.email,
-                subject: `${event.emoji} Flash Sale! ${event.name} — ${event.discount}% OFF Starts Tomorrow!`,
+                subject: `${event.emoji} Starts Tomorrow! ${event.name} — ${event.discount}% OFF`,
                 html: buildFlashEmail(event, recipient.name)
             });
             sent++;
