@@ -1,0 +1,17 @@
+{
+  "name": "vastra-kuteer-root",
+  "version": "1.0.0",
+  "description": "Root configuration for deploying Vastra Kuteer",
+  "scripts": {
+    "install-all": "npm --prefix server install && npm --prefix client install",
+    "build": "npm --prefix client run build",
+    "start": "npm --prefix server start",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "mongodb": "^7.1.1"
+  }
+}
