@@ -14,12 +14,13 @@ const EVENTS = [
     // MARCH
     { id: 'holi',          name: 'Holi',                    emoji: '🎨', start: { month: 3, day: 12 }, end: { month: 3, day: 15 }, coupon: 'HOLI20',       discount: 20 },
     // APRIL
-    { id: 'ugadi',         name: 'Ugadi / Gudi Padwa',      emoji: '🌸', start: { month: 4, day: 30 }, end: { month: 5, day: 3  }, coupon: 'UGADI20',      discount: 20 },
-    // APRIL-MAY
-    { id: 'ramnavami',     name: 'Ram Navami',               emoji: '🙏', start: { month: 4, day: 6  }, end: { month: 4, day: 8  }, coupon: 'RAMNAVAMI15', discount: 15 },
-    { id: 'eid',           name: 'Eid ul-Fitr',              emoji: '🌙', start: { month: 3, day: 30 }, end: { month: 4, day: 2  }, coupon: 'EID20',        discount: 20 },
-    // MAY
-    { id: 'summer_sale',   name: 'Summer Sale',              emoji: '☀️', start: { month: 5, day: 1  }, end: { month: 5, day: 15 }, coupon: 'SUMMER15',     discount: 15 },
+    // APRIL
+    { id: 'ugadi',         name: 'Ugadi / Gudi Padwa',      emoji: '🌸', start: { month: 3, day: 25 }, end: { month: 3, day: 29 }, coupon: 'UGADI20',      discount: 20 },
+    { id: 'ramnavami',     name: 'Ram Navami',               emoji: '🙏', start: { month: 4, day: 5  }, end: { month: 4, day: 7  }, coupon: 'RAMNAVAMI15', discount: 15 },
+    { id: 'vishu',         name: 'Vishu / Baisakhi',        emoji: '🌾', start: { month: 4, day: 12 }, end: { month: 4, day: 16 }, coupon: 'HARVEST20',    discount: 20 },
+    { id: 'akshaya',       name: 'Akshaya Tritiya',          emoji: '🪙', start: { month: 4, day: 17 }, end: { month: 4, day: 22 }, coupon: 'AKSHAYA20',    discount: 20 },
+    // MAY-JUNE
+    { id: 'summer_sale',   name: 'Summer Sale',              emoji: '☀️', start: { month: 4, day: 25 }, end: { month: 6, day: 20 }, coupon: 'SUMMER15',     discount: 15 },
     // JULY-AUGUST
     { id: 'eid_adha',      name: 'Eid ul-Adha',              emoji: '🕌', start: { month: 6, day: 6  }, end: { month: 6, day: 9  }, coupon: 'EIDADHA20',    discount: 20 },
     { id: 'rakhi',         name: 'Raksha Bandhan',           emoji: '🎀', start: { month: 8, day: 7  }, end: { month: 8, day: 10 }, coupon: 'RAKHI15',      discount: 15 },
