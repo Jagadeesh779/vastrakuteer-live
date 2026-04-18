@@ -120,13 +120,14 @@ cron.schedule('0 8 * * *', async () => {
 }, { timezone: 'Asia/Kolkata' });
 
 // ── Flash Sale Marketing Cron (9 AM every day) ───────────────────────────────
-const { getUpcomingEvent } = require('./utils/eventCalendar');
+const { getUpcomingEvent, EVENTS } = require('./utils/eventCalendar');
 const { buildFlashEmail } = require('./utils/emailTemplates');
 const { getAllUsers } = require('./utils/jsonDb');
 const User = require('./models/User');
 
 /**
  * Core function: gather all user emails from DB and send flash sale blast.
+ * Works for ALL events in the calendar.
  * Called by the daily cron AND by the admin manual-trigger endpoint.
  */
 const sendFlashSaleEmails = async (event) => {
@@ -159,42 +160,52 @@ const sendFlashSaleEmails = async (event) => {
         return { sent: 0, failed: 0 };
     }
 
+    console.log(`[FLASH EMAIL] Sending "${event.name}" email to ${recipients.length} users...`);
+
     let sent = 0, failed = 0;
     for (const recipient of recipients) {
         try {
             await transporter.sendMail({
                 from: `"Vastra Kuteer" <${process.env.EMAIL_USER}>`,
                 to: recipient.email,
-                subject: `${event.emoji} Starts Tomorrow! ${event.name} — ${event.discount}% OFF`,
+                subject: `${event.emoji} ${event.name} Sale — Flat ${event.discount}% OFF! Code: ${event.coupon}`,
                 html: buildFlashEmail(event, recipient.name)
             });
             sent++;
-            console.log(`[FLASH EMAIL] Sent to ${recipient.email}`);
+            console.log(`[FLASH EMAIL] ✅ Sent → ${recipient.email}`);
         } catch (err) {
-            console.error(`[FLASH EMAIL] Failed for ${recipient.email}:`, err.message);
+            console.error(`[FLASH EMAIL] ❌ Failed → ${recipient.email}:`, err.message);
             failed++;
         }
     }
-    console.log(`[FLASH EMAIL] Done. Sent: ${sent}, Failed: ${failed}`);
+    console.log(`[FLASH EMAIL] Done — ${event.name}. Sent: ${sent}, Failed: ${failed}`);
     return { sent, failed };
 };
 
 // Export so admin route can call it manually
 module.exports.sendFlashSaleEmails = sendFlashSaleEmails;
 
+// ── Daily cron: fires at 9 AM IST, auto-detects tomorrow's event ─────────────
 cron.schedule('0 9 * * *', async () => {
     try {
-        const upcomingEvent = getUpcomingEvent();
+        const upcomingEvent = getUpcomingEvent(); // checks ALL 24 events
         if (!upcomingEvent) {
-            console.log('[FLASH EMAIL CRON] No upcoming event tomorrow. Skipping.');
+            console.log('[FLASH EMAIL CRON] No event starting tomorrow. Skipping.');
             return;
         }
-        console.log(`[FLASH EMAIL CRON] Upcoming event: ${upcomingEvent.name}. Sending flash emails...`);
+        console.log(`[FLASH EMAIL CRON] 🎉 Event tomorrow: ${upcomingEvent.emoji} ${upcomingEvent.name}. Blasting emails...`);
         await sendFlashSaleEmails(upcomingEvent);
     } catch (err) {
         console.error('[FLASH EMAIL CRON] Error:', err.message);
     }
 }, { timezone: 'Asia/Kolkata' });
+
+// Log all upcoming events on startup
+console.log('\n📅 Flash Sale Email Schedule (auto-fires 9 AM IST, 1 day before each):');
+EVENTS.forEach(e => {
+    console.log(`   ${e.emoji}  ${e.name.padEnd(25)} → starts ${e.start.month}/${e.start.day} | ${e.discount}% OFF | ${e.coupon}`);
+});
+console.log('');
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
