@@ -106,11 +106,12 @@ router.post('/', async (req, res) => {
                 shippingFee
             });
 
+            let finalOrder;
             if (isConnected()) {
-                const createdOrder = await order.save();
-                res.status(201).json(createdOrder);
+                finalOrder = await order.save();
+                res.status(201).json(finalOrder);
             } else {
-                const savedOrder = saveOrder({
+                finalOrder = saveOrder({
                     user,
                     items,
                     totalAmount,
@@ -124,7 +125,41 @@ router.post('/', async (req, res) => {
                     discountAmount,
                     shippingFee
                 });
-                res.status(201).json(savedOrder);
+                res.status(201).json(finalOrder);
+            }
+
+            // Asynchronously send order receipt email
+            try {
+                let customerEmail = shippingAddress?.email;
+                if (!customerEmail && user) {
+                    if (isConnected()) {
+                        const User = require('../models/User');
+                        const userDoc = await User.findById(user);
+                        if (userDoc) customerEmail = userDoc.email;
+                    } else {
+                        const { getUsers } = require('../utils/jsonDb');
+                        const userDoc = getUsers().find(u => u._id === user || u.id === user);
+                        if (userDoc) customerEmail = userDoc.email;
+                    }
+                }
+                const customerName = shippingAddress?.fullName || 'Valued Customer';
+                
+                if (customerEmail && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+                    const nodemailer = require('nodemailer');
+                    const { buildReceiptEmail } = require('../utils/emailTemplates');
+                    const transporter = nodemailer.createTransport({
+                        service: 'gmail',
+                        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+                    });
+                    transporter.sendMail({
+                        from: \`"Vastra Kuteer" <\${process.env.EMAIL_USER}>\`,
+                        to: customerEmail,
+                        subject: \`Order Confirmation - Vastra Kuteer #\${(finalOrder._id || finalOrder.id).toString().slice(-6).toUpperCase()}\`,
+                        html: buildReceiptEmail(finalOrder, customerName)
+                    }).catch(err => console.error('Order receipt email failed:', err.message));
+                }
+            } catch (emailErr) {
+                console.error('Error initiating receipt email:', emailErr.message);
             }
 
         } catch (saveError) {

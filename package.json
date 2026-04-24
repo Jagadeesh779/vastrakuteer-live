@@ -12,6 +12,7 @@
     "concurrently": "^8.2.2"
   },
   "dependencies": {
-    "mongodb": "^7.1.1"
+    "mongodb": "^7.1.1",
+    "pptxgenjs": "^4.0.1"
   }
 }

@@ -189,4 +189,95 @@ const buildWelcomeEmail = (name, event = null) => `
 </html>
 `;
 
-module.exports = { buildFlashEmail, buildWelcomeEmail };
+/**
+ * Generates an order receipt / bill email.
+ * @param {object} order - The created order object
+ * @param {string} userName - The name of the customer
+ * @returns {string} HTML string
+ */
+const buildReceiptEmail = (order, userName) => `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#F5F3FF;font-family:Georgia,serif;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center" style="padding:30px 15px;">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#065f46 0%,#047857 60%,#0d9488 100%);padding:40px;text-align:center;">
+            <h1 style="color:#ffffff;font-size:28px;margin:0 0 6px;letter-spacing:2px;">VASTRA KUTEER</h1>
+            <p style="color:rgba(255,255,255,0.8);font-size:13px;margin:0;letter-spacing:3px;text-transform:uppercase;">Order Confirmation</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px;">
+            <h2 style="color:#1f2937;font-size:24px;margin:0 0 16px;">Thank you for your order, ${userName}!</h2>
+            <p style="color:#6b7280;font-size:16px;line-height:1.6;margin:0 0 30px;">
+              We have received your order and are getting it ready for shipment. Below is your order summary and bill.
+            </p>
+            
+            <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;padding:20px;margin-bottom:30px;">
+              <p style="margin:0 0 10px;font-size:14px;color:#4B5563;"><strong>Order ID:</strong> #${(order._id || order.id).toString().slice(-6).toUpperCase()}</p>
+              <p style="margin:0 0 10px;font-size:14px;color:#4B5563;"><strong>Date:</strong> ${new Date(order.createdAt || Date.now()).toLocaleDateString()}</p>
+              <p style="margin:0;font-size:14px;color:#4B5563;"><strong>Payment Status:</strong> <span style="color:#065f46;font-weight:bold;">${order.isPaid ? 'Paid Online' : 'Pending (Cash on Delivery)'}</span></p>
+            </div>
+
+            <h3 style="color:#111827;font-size:18px;margin:0 0 16px;border-bottom:2px solid #E5E7EB;padding-bottom:8px;">Order Details</h3>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+              ${order.items.map(item => \`
+                <tr>
+                  <td style="padding:12px 0;border-bottom:1px solid #E5E7EB;">
+                    <p style="margin:0;font-size:16px;color:#111827;font-weight:bold;">\${item.name}</p>
+                    <p style="margin:4px 0 0;font-size:14px;color:#6B7280;">Qty: \${item.qty} \${item.selectedSize ? '| Size: ' + item.selectedSize : ''}</p>
+                  </td>
+                  <td align="right" style="padding:12px 0;border-bottom:1px solid #E5E7EB;font-size:16px;color:#111827;font-weight:bold;">
+                    ₹\${item.price * item.qty}
+                  </td>
+                </tr>
+              \`).join('')}
+            </table>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:30px;">
+              <tr>
+                <td style="padding:8px 0;color:#4B5563;font-size:14px;">Subtotal</td>
+                <td align="right" style="padding:8px 0;color:#111827;font-size:14px;font-weight:bold;">₹\${order.totalAmount - (order.shippingFee || 0) + (order.discountAmount || 0)}</td>
+              </tr>
+              \${order.discountAmount ? \`
+              <tr>
+                <td style="padding:8px 0;color:#16A34A;font-size:14px;">Discount (\${order.couponCode || 'Promo'})</td>
+                <td align="right" style="padding:8px 0;color:#16A34A;font-size:14px;font-weight:bold;">-₹\${order.discountAmount}</td>
+              </tr>
+              \` : ''}
+              <tr>
+                <td style="padding:8px 0;color:#4B5563;font-size:14px;">Shipping</td>
+                <td align="right" style="padding:8px 0;color:#111827;font-size:14px;font-weight:bold;">\${order.shippingFee ? '₹' + order.shippingFee : 'Free'}</td>
+              </tr>
+              <tr>
+                <td style="padding:16px 0 0;color:#111827;font-size:18px;font-weight:bold;border-top:2px solid #E5E7EB;">Total Amount</td>
+                <td align="right" style="padding:16px 0 0;color:#065f46;font-size:22px;font-weight:bold;border-top:2px solid #E5E7EB;">₹\${order.totalAmount}</td>
+              </tr>
+            </table>
+
+            <h3 style="color:#111827;font-size:18px;margin:0 0 16px;border-bottom:2px solid #E5E7EB;padding-bottom:8px;">Shipping Address</h3>
+            <p style="color:#4B5563;font-size:14px;line-height:1.6;margin:0;">
+              \${order.shippingAddress.fullName}<br>
+              \${order.shippingAddress.address}<br>
+              \${order.shippingAddress.city}, \${order.shippingAddress.state} \${order.shippingAddress.postalCode}<br>
+              Phone: \${order.shippingAddress.phone}
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#F8F8FF;padding:24px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+            <p style="color:#9ca3af;font-size:12px;margin:0 0 8px;">We will notify you once your order is shipped.</p>
+            <p style="color:#9ca3af;font-size:12px;margin:0;">© 2026 Vastra Kuteer | <a href="https://vastrakuteer.in" style="color:#065f46;">vastrakuteer.in</a></p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>  
+</body>
+</html>
+\`;
+
+module.exports = { buildFlashEmail, buildWelcomeEmail, buildReceiptEmail };
