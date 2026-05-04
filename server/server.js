@@ -200,6 +200,22 @@ cron.schedule('0 9 * * *', async () => {
     }
 }, { timezone: 'Asia/Kolkata' });
 
+// ── One-Time Blast: Summer Sale Reminder on May 10 at 9 AM IST ───────────────
+cron.schedule('0 9 10 5 *', async () => {
+    try {
+        const summerSale = EVENTS.find(e => e.id === 'summer_sale');
+        if (!summerSale) {
+            console.log('[MAY 10 BLAST] ❌ summer_sale event not found in calendar.');
+            return;
+        }
+        console.log('[MAY 10 BLAST] ☀️ Sending Summer Sale reminder email to all users...');
+        const result = await sendFlashSaleEmails(summerSale);
+        console.log(`[MAY 10 BLAST] ✅ Done — Sent: ${result.sent}, Failed: ${result.failed}`);
+    } catch (err) {
+        console.error('[MAY 10 BLAST] Error:', err.message);
+    }
+}, { timezone: 'Asia/Kolkata' });
+
 // Log all upcoming events on startup
 console.log('\n📅 Flash Sale Email Schedule (auto-fires 9 AM IST, 1 day before each):');
 EVENTS.forEach(e => {
