@@ -538,6 +538,9 @@ router.post('/google', async (req, res) => {
             }
         }
 
+        // Send welcome email immediately for brand new Google users
+        if (isNewUser) sendWelcomeEmail(name, email);
+
         sendTokenResponse(user, 200, res, 'Google Login successful', isNewUser);
     } catch (err) {
         console.error('Google Auth Error:', err);
@@ -576,6 +579,9 @@ router.post('/google-userinfo', async (req, res) => {
                 await user.save();
             }
         }
+        // Send welcome email immediately for brand new Google users
+        if (isNewUser) sendWelcomeEmail(name || email, email);
+
         sendTokenResponse(user, 200, res, 'Google Login successful', isNewUser);
     } catch (err) {
         console.error('Google Userinfo Auth Error:', err);
