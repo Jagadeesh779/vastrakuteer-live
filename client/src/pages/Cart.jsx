@@ -72,6 +72,13 @@ const Cart = () => {
     };
 
     const handleBuyNow = async () => {
+        // 🔐 Amazon-style: require login only at checkout
+        const loggedInUser = localStorage.getItem('user');
+        if (!loggedInUser) {
+            navigate('/login', { state: { from: '/cart' } });
+            return;
+        }
+
         if (!isAddressValid()) {
             alert("Please fill in all shipping address fields.");
             return;

@@ -62,6 +62,7 @@ function Layout() {
                     <Route path="/collections" element={<Collections />} />
                     <Route path="/product/:id" element={<ProductDetails />} />
                     <Route path="/about" element={<About />} />
+                    <Route path="/cart" element={<Cart />} />
 
                     {/* Auth routes */}
                     <Route path="/login" element={<Login />} />
@@ -69,10 +70,7 @@ function Layout() {
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-                    {/* Protected routes — login required */}
-                    <Route path="/cart" element={
-                        <ProtectedRoute roles={['user', 'admin']}><Cart /></ProtectedRoute>
-                    } />
+                    {/* Protected routes — login required only at checkout */}
                     <Route path="/profile" element={
                         <ProtectedRoute roles={['user', 'admin']}><Profile /></ProtectedRoute>
                     } />

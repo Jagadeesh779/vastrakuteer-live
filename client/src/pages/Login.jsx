@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, LogIn, ArrowRight, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
@@ -18,6 +18,9 @@ const Login = () => {
     const [error, setError] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
     const navigate = useNavigate();
+    const location = useLocation();
+    // If user was redirected from a protected action (e.g. checkout), send them back there
+    const redirectTo = location.state?.from || '/home';
 
     useEffect(() => {
         const prev = document.body.style.overflow;
@@ -63,7 +66,7 @@ const Login = () => {
                 sessionStorage.setItem('isNewUser', 'true');
             }
             
-            navigate('/home');
+            navigate(redirectTo);
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
         }
@@ -88,7 +91,7 @@ const Login = () => {
                     sessionStorage.setItem('isNewUser', 'true');
                 }
                 
-                navigate('/home');
+                navigate(redirectTo);
             } catch {
                 setError('Google Sign-In failed. Please try again.');
             }
