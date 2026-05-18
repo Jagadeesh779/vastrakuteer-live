@@ -224,46 +224,38 @@ const buildReceiptEmail = (order, userName) => `
 
             <h3 style="color:#111827;font-size:18px;margin:0 0 16px;border-bottom:2px solid #E5E7EB;padding-bottom:8px;">Order Details</h3>
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
-              ${order.items.map(item => \`
-                <tr>
-                  <td style="padding:12px 0;border-bottom:1px solid #E5E7EB;">
-                    <p style="margin:0;font-size:16px;color:#111827;font-weight:bold;">\${item.name}</p>
-                    <p style="margin:4px 0 0;font-size:14px;color:#6B7280;">Qty: \${item.qty} \${item.selectedSize ? '| Size: ' + item.selectedSize : ''}</p>
-                  </td>
-                  <td align="right" style="padding:12px 0;border-bottom:1px solid #E5E7EB;font-size:16px;color:#111827;font-weight:bold;">
-                    ₹\${item.price * item.qty}
-                  </td>
-                </tr>
-              \`).join('')}
+              ${order.items.map(item => '<tr>' +
+                '<td style="padding:12px 0;border-bottom:1px solid #E5E7EB;">' +
+                '<p style="margin:0;font-size:16px;color:#111827;font-weight:bold;">' + item.name + '</p>' +
+                '<p style="margin:4px 0 0;font-size:14px;color:#6B7280;">Qty: ' + item.qty + (item.selectedSize ? ' | Size: ' + item.selectedSize : '') + '</p>' +
+                '</td>' +
+                '<td align="right" style="padding:12px 0;border-bottom:1px solid #E5E7EB;font-size:16px;color:#111827;font-weight:bold;">' +
+                '\u20B9' + (item.price * item.qty) +
+                '</td></tr>').join('')}
             </table>
 
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:30px;">
               <tr>
                 <td style="padding:8px 0;color:#4B5563;font-size:14px;">Subtotal</td>
-                <td align="right" style="padding:8px 0;color:#111827;font-size:14px;font-weight:bold;">₹\${order.totalAmount - (order.shippingFee || 0) + (order.discountAmount || 0)}</td>
+                <td align="right" style="padding:8px 0;color:#111827;font-size:14px;font-weight:bold;">\u20B9${order.totalAmount - (order.shippingFee || 0) + (order.discountAmount || 0)}</td>
               </tr>
-              \${order.discountAmount ? \`
-              <tr>
-                <td style="padding:8px 0;color:#16A34A;font-size:14px;">Discount (\${order.couponCode || 'Promo'})</td>
-                <td align="right" style="padding:8px 0;color:#16A34A;font-size:14px;font-weight:bold;">-₹\${order.discountAmount}</td>
-              </tr>
-              \` : ''}
+              ${order.discountAmount ? '<tr><td style="padding:8px 0;color:#16A34A;font-size:14px;">Discount (' + (order.couponCode || 'Promo') + ')</td><td align="right" style="padding:8px 0;color:#16A34A;font-size:14px;font-weight:bold;">-\u20B9' + order.discountAmount + '</td></tr>' : ''}
               <tr>
                 <td style="padding:8px 0;color:#4B5563;font-size:14px;">Shipping</td>
-                <td align="right" style="padding:8px 0;color:#111827;font-size:14px;font-weight:bold;">\${order.shippingFee ? '₹' + order.shippingFee : 'Free'}</td>
+                <td align="right" style="padding:8px 0;color:#111827;font-size:14px;font-weight:bold;">${order.shippingFee ? '\u20B9' + order.shippingFee : 'Free'}</td>
               </tr>
               <tr>
                 <td style="padding:16px 0 0;color:#111827;font-size:18px;font-weight:bold;border-top:2px solid #E5E7EB;">Total Amount</td>
-                <td align="right" style="padding:16px 0 0;color:#065f46;font-size:22px;font-weight:bold;border-top:2px solid #E5E7EB;">₹\${order.totalAmount}</td>
+                <td align="right" style="padding:16px 0 0;color:#065f46;font-size:22px;font-weight:bold;border-top:2px solid #E5E7EB;">\u20B9${order.totalAmount}</td>
               </tr>
             </table>
 
             <h3 style="color:#111827;font-size:18px;margin:0 0 16px;border-bottom:2px solid #E5E7EB;padding-bottom:8px;">Shipping Address</h3>
             <p style="color:#4B5563;font-size:14px;line-height:1.6;margin:0;">
-              \${order.shippingAddress.fullName}<br>
-              \${order.shippingAddress.address}<br>
-              \${order.shippingAddress.city}, \${order.shippingAddress.state} \${order.shippingAddress.postalCode}<br>
-              Phone: \${order.shippingAddress.phone}
+              ${order.shippingAddress.fullName}<br>
+              ${order.shippingAddress.street || order.shippingAddress.address || ''}<br>
+              ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zip || order.shippingAddress.postalCode || ''}<br>
+              Phone: ${order.shippingAddress.phone}
             </p>
           </td>
         </tr>
@@ -278,6 +270,6 @@ const buildReceiptEmail = (order, userName) => `
   </table>  
 </body>
 </html>
-\`;
+`;
 
 module.exports = { buildFlashEmail, buildWelcomeEmail, buildReceiptEmail };
