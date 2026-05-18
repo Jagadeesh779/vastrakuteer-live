@@ -3,6 +3,7 @@ import { useCart } from '../context/CartContext';
 import { Trash2, ShoppingBag, Plus, Minus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import GradientText from '../components/GradientText';
+import LoginModal from '../components/LoginModal';
 import axios from 'axios';
 import { API_URL } from '../config';
 import { useToast } from '../context/ToastContext';
@@ -14,6 +15,7 @@ const Cart = () => {
     const [couponCode, setCouponCode] = React.useState('');
     const [discount, setDiscount] = React.useState(0);
     const [couponMsg, setCouponMsg] = React.useState('');
+    const [loginModal, setLoginModal] = React.useState(false);
     const [shippingAddress, setShippingAddress] = React.useState({
         fullName: '',
         street: '',
@@ -75,7 +77,7 @@ const Cart = () => {
         // 🔐 Amazon-style: require login only at checkout
         const loggedInUser = localStorage.getItem('user');
         if (!loggedInUser) {
-            navigate('/login', { state: { from: '/cart' } });
+            setLoginModal(true);
             return;
         }
 
@@ -405,6 +407,17 @@ const Cart = () => {
                 </div>
             </div>
         </div>
+
+        {/* Floating Login Modal */}
+        <LoginModal
+            isOpen={loginModal}
+            onClose={() => setLoginModal(false)}
+            onSuccess={() => {
+                setLoginModal(false);
+                // After login, auto-trigger payment
+                handleBuyNow();
+            }}
+        />
     );
 };
 

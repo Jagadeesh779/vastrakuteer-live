@@ -8,6 +8,7 @@ import { useFavorites } from '../context/FavoritesContext';
 import { useToast } from '../context/ToastContext';
 import ImageZoom from '../components/ImageZoom';
 import GradientText from '../components/GradientText';
+import LoginModal from '../components/LoginModal';
 
 
 const ProductDetails = () => {
@@ -22,6 +23,7 @@ const ProductDetails = () => {
     const [selectedSize, setSelectedSize] = useState(null);
     const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
     const [isReviewPhotoUploading, setIsReviewPhotoUploading] = useState(false);
+    const [loginModal, setLoginModal] = useState({ open: false, onSuccess: null });
 
 
     // Review State
@@ -263,31 +265,53 @@ const ProductDetails = () => {
                                         Currently Sold Out
                                     </div>
                                 ) : (
-                                    <>
-                                        <button
-                                            onClick={() => {
-                                                if (hasSizeStock && !selectedSize) { showToast('Please select a size first', 'info'); return; }
-                                                addToCart({ ...product, selectedSize: hasSizeStock ? selectedSize : null });
-                                                showToast(`${product.name} added to cart!`, 'success');
-                                            }}
-                                            disabled={!isSelectionValid || remaining <= 0}
-                                            className="w-full bg-vastra-gold hover:bg-yellow-500 text-gray-900 font-medium py-3 rounded-full shadow-sm transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            <ShoppingBag className="h-5 w-5 mr-2" />
-                                            {remaining <= 0 ? 'Limit Reached' : 'Add to Cart'}
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                if (hasSizeStock && !selectedSize) { showToast('Please select a size first', 'info'); return; }
-                                                addToCart({ ...product, selectedSize: hasSizeStock ? selectedSize : null });
-                                                navigate('/cart');
-                                            }}
-                                            disabled={!isSelectionValid || remaining <= 0}
-                                            className="w-full bg-vastra-teal hover:bg-teal-700 text-white font-medium py-3 rounded-full shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            Buy Now
-                                        </button>
-                                    </>
+                                        <>
+                                            <button
+                                                onClick={() => {
+                                                    if (hasSizeStock && !selectedSize) { showToast('Please select a size first', 'info'); return; }
+                                                    const loggedInUser = localStorage.getItem('user');
+                                                    if (!loggedInUser) {
+                                                        setLoginModal({
+                                                            open: true,
+                                                            onSuccess: () => {
+                                                                addToCart({ ...product, selectedSize: hasSizeStock ? selectedSize : null });
+                                                                showToast(`${product.name} added to cart!`, 'success');
+                                                            }
+                                                        });
+                                                        return;
+                                                    }
+                                                    addToCart({ ...product, selectedSize: hasSizeStock ? selectedSize : null });
+                                                    showToast(`${product.name} added to cart!`, 'success');
+                                                }}
+                                                disabled={!isSelectionValid || remaining <= 0}
+                                                className="w-full bg-vastra-gold hover:bg-yellow-500 text-gray-900 font-medium py-3 rounded-full shadow-sm transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                <ShoppingBag className="h-5 w-5 mr-2" />
+                                                {remaining <= 0 ? 'Limit Reached' : 'Add to Cart'}
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    if (hasSizeStock && !selectedSize) { showToast('Please select a size first', 'info'); return; }
+                                                    const loggedInUser = localStorage.getItem('user');
+                                                    if (!loggedInUser) {
+                                                        setLoginModal({
+                                                            open: true,
+                                                            onSuccess: () => {
+                                                                addToCart({ ...product, selectedSize: hasSizeStock ? selectedSize : null });
+                                                                navigate('/cart');
+                                                            }
+                                                        });
+                                                        return;
+                                                    }
+                                                    addToCart({ ...product, selectedSize: hasSizeStock ? selectedSize : null });
+                                                    navigate('/cart');
+                                                }}
+                                                disabled={!isSelectionValid || remaining <= 0}
+                                                className="w-full bg-vastra-teal hover:bg-teal-700 text-white font-medium py-3 rounded-full shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                Buy Now
+                                            </button>
+                                        </>
                                 );
                             })()}
                         </div>
@@ -502,7 +526,7 @@ const ProductDetails = () => {
                                         </button>
                                     </form>
                                 ) : (
-                                    <p className="text-gray-600">Please <span onClick={() => navigate('/login')} className="text-vastra-teal cursor-pointer hover:underline">login</span> to write a review.</p>
+                                    <p className="text-gray-600">Please <span onClick={() => setLoginModal({ open: true, onSuccess: null })} className="text-vastra-teal cursor-pointer hover:underline">login</span> to write a review.</p>
                                 )}
                             </div>
 
@@ -546,6 +570,16 @@ const ProductDetails = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Floating Login Modal */}
+            <LoginModal
+                isOpen={loginModal.open}
+                onClose={() => setLoginModal({ open: false, onSuccess: null })}
+                onSuccess={() => {
+                    setLoginModal({ open: false, onSuccess: null });
+                    if (loginModal.onSuccess) loginModal.onSuccess();
+                }}
+            />
         </div>
     );
 };
