@@ -152,9 +152,9 @@ router.post('/', async (req, res) => {
                         auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
                     });
                     transporter.sendMail({
-                        from: \`"Vastra Kuteer" <\${process.env.EMAIL_USER}>\`,
+                        from: '"Vastra Kuteer" <' + process.env.EMAIL_USER + '>',
                         to: customerEmail,
-                        subject: \`Order Confirmation - Vastra Kuteer #\${(finalOrder._id || finalOrder.id).toString().slice(-6).toUpperCase()}\`,
+                        subject: 'Order Confirmation - Vastra Kuteer #' + (finalOrder._id || finalOrder.id).toString().slice(-6).toUpperCase(),
                         html: buildReceiptEmail(finalOrder, customerName)
                     }).catch(err => console.error('Order receipt email failed:', err.message));
                 }
