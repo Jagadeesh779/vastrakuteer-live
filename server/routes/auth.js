@@ -115,7 +115,7 @@ router.post('/send-register-otp', async (req, res) => {
 
         // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        
+
         // Cache it for 10 minutes
         global.registerOTPs.set(email, { otp, expires: Date.now() + 10 * 60 * 1000 });
 
@@ -139,7 +139,7 @@ router.post('/send-register-otp', async (req, res) => {
 
         await transporter.sendMail(mailOptions);
         logDebug(`[OTP SENT] ${email} - OTP: ${otp}`);
-        
+
         res.json({ message: 'OTP sent to your email' });
     } catch (err) {
         logDebug(`[OTP ERROR] ${err.message}`);
@@ -177,7 +177,7 @@ router.post('/register', async (req, res) => {
                 return res.status(400).json({ message: 'User already exists' });
             }
             user = { fullName, email, password, role: 'user', referralCode: newReferralCode, referredBy, earnedCoupons: [] };
-            
+
             if (referredBy) {
                 const users = getAllUsers();
                 const referrerIndex = users.findIndex(u => u.referralCode === referredBy);
@@ -288,7 +288,7 @@ router.post('/send-login-otp', async (req, res) => {
 
         // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        
+
         // Cache it for 5 minutes (shorter for login)
         global.loginOTPs.set(email, { otp, expires: Date.now() + 5 * 60 * 1000 });
 
@@ -320,7 +320,7 @@ router.post('/send-login-otp', async (req, res) => {
 
         await transporter.sendMail(mailOptions);
         logDebug(`[LOGIN OTP SENT] ${email} - OTP: ${otp}`);
-        
+
         res.json({ message: 'OTP sent to your email' });
     } catch (err) {
         logDebug(`[LOGIN OTP ERROR] ${err.message}`);
@@ -647,14 +647,14 @@ router.get('/users', admin, async (req, res) => {
         } else {
             users = await User.find().select('-password');
         }
-        
+
         // Strip passwords for JSON DB users (Mongo query already excludes them)
         const safeUsers = users.map(user => {
             const u = user.toObject ? user.toObject() : user;
             const { password, ...rest } = u;
             return rest;
         });
-        
+
         res.json(safeUsers);
     } catch (err) {
         console.error(err);

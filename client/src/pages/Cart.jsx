@@ -406,18 +406,26 @@ const Cart = () => {
                     </div>
                 </div>
             </div>
+            {/* Floating Login Modal */}
+            <LoginModal
+                isOpen={loginModal}
+                onClose={() => setLoginModal(false)}
+                onSuccess={() => {
+                    setLoginModal(false);
+                    // Prefill address from newly logged in user
+                    const user = JSON.parse(localStorage.getItem('user'));
+                    if (user) {
+                        setShippingAddress(prev => ({
+                            ...prev,
+                            fullName: prev.fullName || user.fullName || '',
+                            email: prev.email || user.email || ''
+                        }));
+                    }
+                    // After login, auto-trigger payment
+                    handleBuyNow();
+                }}
+            />
         </div>
-
-        {/* Floating Login Modal */}
-        <LoginModal
-            isOpen={loginModal}
-            onClose={() => setLoginModal(false)}
-            onSuccess={() => {
-                setLoginModal(false);
-                // After login, auto-trigger payment
-                handleBuyNow();
-            }}
-        />
     );
 };
 

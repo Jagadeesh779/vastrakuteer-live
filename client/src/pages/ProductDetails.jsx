@@ -269,17 +269,6 @@ const ProductDetails = () => {
                                             <button
                                                 onClick={() => {
                                                     if (hasSizeStock && !selectedSize) { showToast('Please select a size first', 'info'); return; }
-                                                    const loggedInUser = localStorage.getItem('user');
-                                                    if (!loggedInUser) {
-                                                        setLoginModal({
-                                                            open: true,
-                                                            onSuccess: () => {
-                                                                addToCart({ ...product, selectedSize: hasSizeStock ? selectedSize : null });
-                                                                showToast(`${product.name} added to cart!`, 'success');
-                                                            }
-                                                        });
-                                                        return;
-                                                    }
                                                     addToCart({ ...product, selectedSize: hasSizeStock ? selectedSize : null });
                                                     showToast(`${product.name} added to cart!`, 'success');
                                                 }}
@@ -292,17 +281,6 @@ const ProductDetails = () => {
                                             <button
                                                 onClick={() => {
                                                     if (hasSizeStock && !selectedSize) { showToast('Please select a size first', 'info'); return; }
-                                                    const loggedInUser = localStorage.getItem('user');
-                                                    if (!loggedInUser) {
-                                                        setLoginModal({
-                                                            open: true,
-                                                            onSuccess: () => {
-                                                                addToCart({ ...product, selectedSize: hasSizeStock ? selectedSize : null });
-                                                                navigate('/cart');
-                                                            }
-                                                        });
-                                                        return;
-                                                    }
                                                     addToCart({ ...product, selectedSize: hasSizeStock ? selectedSize : null });
                                                     navigate('/cart');
                                                 }}
