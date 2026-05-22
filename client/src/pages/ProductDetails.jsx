@@ -24,6 +24,7 @@ const ProductDetails = () => {
     const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
     const [isReviewPhotoUploading, setIsReviewPhotoUploading] = useState(false);
     const [loginModal, setLoginModal] = useState({ open: false, onSuccess: null });
+    const [activeDrapeTab, setActiveDrapeTab] = useState('nivi');
 
 
     // Review State
@@ -360,6 +361,118 @@ const ProductDetails = () => {
                                 </tbody>
                             </table>
                         </div>
+
+                        {/* Saree Draping Style Guide */}
+                        {(() => {
+                            const isSaree = product.category?.toLowerCase().includes('saree') || product.name?.toLowerCase().includes('saree');
+                            if (!isSaree) return null;
+
+                            const DRAPE_STYLES = {
+                                nivi: {
+                                    title: 'Traditional Nivi Style',
+                                    description: 'Originating from Andhra Pradesh, Nivi is the classical drape of India, loved for its clean alignment and elegant form.',
+                                    steps: [
+                                        'Tuck the plain end of the saree in the waistband, make one full turn from right to left, keeping the height perfect.',
+                                        'Create 6 to 8 neat pleats at the center waist and tuck them into the waistband facing left.',
+                                        'Take the remaining portion, pleat it neatly, and pass it from under the right arm to drape over the left shoulder.',
+                                        'Adjust the pallu length to reach near the back of the knee, and pin it securely to your blouse shoulder.'
+                                    ],
+                                    videoId: 'n4p8K_8340w'
+                                },
+                                lehenga: {
+                                    title: 'Modern Lehenga Style',
+                                    description: 'Combines the look of a traditional lehenga with a modern saree silhouette, perfect for weddings and festive functions.',
+                                    steps: [
+                                        'Tuck the saree end at the center-back and bring it around the waist, making small, neat pleats all the way around to create a full skirt look.',
+                                        'Continue pleating and tucking till you reach the other end of the back waist.',
+                                        'Take the pallu, pleat it, and bring it over the right shoulder from back to front (Gujarati style) or drape it over the left shoulder.',
+                                        'Secure the pleats with pins, letting the decorative pallu fall gracefully over your shoulder and torso.'
+                                    ],
+                                    videoId: '4yZ465iB03Q'
+                                },
+                                bengali: {
+                                    title: 'Classic Bengali Style',
+                                    description: 'A traditional and majestic drape featuring wide box pleats and a rich pallu wrapped elegantly over both shoulders.',
+                                    steps: [
+                                        'Tuck the saree starting from the right side of the waist, circle it around, and tuck it on the left waist.',
+                                        'Create wide box pleats at the front waist (typically 2 wide pleats folded on both sides).',
+                                        'Take the remaining fabric, make broad pleats, and throw it over your left shoulder from front to back.',
+                                        'Take the right-hand corner of the pallu, bring it forward under your right arm, and throw it over your right shoulder. Classically, tie a heavy key bunch to the corner!'
+                                    ],
+                                    videoId: 'HhFvSg3G0c4'
+                                }
+                            };
+
+                            const drape = DRAPE_STYLES[activeDrapeTab];
+
+                            return (
+                                <div className="mt-10 border-t border-gray-100 pt-8">
+                                    <h3 className="text-xl font-serif font-bold text-gray-900 mb-2">
+                                        <GradientText text="Saree Draping Style Guide" />
+                                    </h3>
+                                    <p className="text-xs text-gray-500 mb-6 leading-relaxed">
+                                        The six-yard saree is an exquisite canvas of cultural heritage. Explore these signature draping styles to elevate your look.
+                                    </p>
+
+                                    {/* Tabs */}
+                                    <div className="flex border-b border-gray-100 mb-6 space-x-6 overflow-x-auto pb-1">
+                                        {Object.entries(DRAPE_STYLES).map(([key, style]) => {
+                                            const isActive = activeDrapeTab === key;
+                                            return (
+                                                <button
+                                                    key={key}
+                                                    type="button"
+                                                    onClick={() => setActiveDrapeTab(key)}
+                                                    className={`pb-3 text-sm font-semibold tracking-wide border-b-2 transition-all whitespace-nowrap cursor-pointer ${
+                                                        isActive 
+                                                            ? 'border-vastra-teal text-vastra-teal font-bold' 
+                                                            : 'border-transparent text-gray-400 hover:text-gray-600'
+                                                    }`}
+                                                >
+                                                    {style.title}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Tab Content */}
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                                        {/* Steps list */}
+                                        <div className="space-y-4">
+                                            <h4 className="font-serif font-bold text-gray-900 text-base">{drape.title}</h4>
+                                            <p className="text-xs text-gray-600 leading-relaxed italic">{drape.description}</p>
+                                            
+                                            <ol className="space-y-3 pt-2">
+                                                {drape.steps.map((step, idx) => (
+                                                    <li key={idx} className="flex items-start text-xs text-gray-700 leading-relaxed">
+                                                        <span className="flex items-center justify-center h-5 w-5 rounded-full bg-teal-50 text-vastra-teal font-bold text-[10px] mr-3 flex-shrink-0 border border-teal-100">
+                                                            {idx + 1}
+                                                        </span>
+                                                        <span className="flex-1">{step}</span>
+                                                    </li>
+                                                ))}
+                                            </ol>
+                                        </div>
+
+                                        {/* Video Embed */}
+                                        <div className="w-full">
+                                            <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-lg border border-teal-50/50 bg-black">
+                                                <iframe
+                                                    title={drape.title}
+                                                    src={`https://www.youtube.com/embed/${drape.videoId}`}
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                    allowFullScreen
+                                                    className="w-full h-full"
+                                                />
+                                            </div>
+                                            <p className="text-[10px] text-gray-400 text-center mt-2 italic">
+                                                * Video tutorial by expert draping consultants
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })()}
 
                         {/* Size Guide Modal */}
                         {isSizeGuideOpen && (

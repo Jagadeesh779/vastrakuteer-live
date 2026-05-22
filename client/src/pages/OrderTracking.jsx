@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import GradientText from '../components/GradientText';
-import { Package, Search, Truck, CheckCircle, Clock } from 'lucide-react';
+import { Package, Search, Truck, CheckCircle, Clock, Home } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '../config';
 
@@ -169,28 +169,114 @@ const OrderTracking = () => {
                             </div>
                         </div>
 
-                        <div className="relative">
-                            {/* Vertical Line */}
-                            <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" style={{ height: 'calc(100% - 2rem)' }}></div>
+                        <div className="relative pt-2">
+                            {/* Vertical Line Background */}
+                            <div className="absolute left-5 top-0 bottom-0 w-1 bg-gray-200 rounded-full" style={{ height: 'calc(100% - 2.5rem)' }}></div>
+                            
+                            {/* Active Vertical Progress Line */}
+                            {(() => {
+                                const lastCompletedIndex = trackingResult.steps.reduce((acc, step, idx) => step.completed ? idx : acc, 0);
+                                const pct = (lastCompletedIndex / (trackingResult.steps.length - 1)) * 100;
+                                return (
+                                    <div 
+                                        className="absolute left-5 top-0 w-1 rounded-full transition-all duration-1000 ease-out animated-progress-bar-vertical" 
+                                        style={{ 
+                                            height: `calc(${pct}% - 0.5rem)`,
+                                            maxHeight: 'calc(100% - 2.5rem)'
+                                        }}
+                                    />
+                                );
+                            })()}
 
-                            <div className="space-y-8">
-                                {trackingResult.steps.map((step, index) => (
-                                    <div key={index} className="relative flex items-start group">
-                                        <div className={`absolute left-0 w-8 h-8 rounded-full border-2 flex items-center justify-center z-10 bg-vastra-bg ${step.completed ? 'border-vastra-teal bg-teal-50' : 'border-gray-300'}`}>
-                                            {step.completed ? (
-                                                <CheckCircle className="h-5 w-5 text-vastra-teal" />
-                                            ) : (
-                                                <div className={`h-2.5 w-2.5 rounded-full ${index === 3 ? 'bg-blue-500 animate-pulse' : 'bg-gray-300'}`}></div>
-                                            )}
-                                        </div>
-                                        <div className="ml-12">
-                                            <h3 className={`font-semibold ${step.completed ? 'text-gray-900' : 'text-gray-500'}`}>{step.status}</h3>
-                                            <p className="text-xs text-gray-400 mt-1">{step.date}</p>
-                                        </div>
-                                    </div>
-                                ))}
+                            <div className="space-y-10">
+                                {(() => {
+                                    const lastCompletedIndex = trackingResult.steps.reduce((acc, step, idx) => step.completed ? idx : acc, 0);
+                                    const stepIcons = [CheckCircle, Package, Truck, Clock, Home];
+
+                                    return trackingResult.steps.map((step, index) => {
+                                        const Icon = stepIcons[index] || Package;
+                                        const isCompleted = step.completed;
+                                        const isActive = index === lastCompletedIndex;
+
+                                        return (
+                                            <div key={index} className="relative flex items-center group">
+                                                {/* Icon Node Container */}
+                                                <div className="relative flex items-center justify-center z-10">
+                                                    {isActive && (
+                                                        <>
+                                                            <span className="absolute h-14 w-14 rounded-full bg-teal-500/20 animate-ping pointer-events-none" />
+                                                            <span className="absolute h-12 w-12 rounded-full bg-teal-500/30 animate-pulse pointer-events-none" />
+                                                        </>
+                                                    )}
+                                                    <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-500 bg-vastra-bg ${
+                                                        isActive
+                                                            ? 'border-teal-400 text-white shadow-[0_0_15px_rgba(13,148,136,0.6)] animate-bounce-gentle'
+                                                            : isCompleted
+                                                                ? 'border-teal-600 text-white shadow-sm'
+                                                                : 'border-gray-200 text-gray-300 bg-white'
+                                                    }`}
+                                                    style={isCompleted ? { background: 'linear-gradient(135deg, #065f46, #0d9488)' } : {}}>
+                                                        <Icon className={`h-5 w-5 ${isActive ? 'animate-wiggle' : ''}`} />
+                                                    </div>
+                                                </div>
+
+                                                {/* Status Details Card */}
+                                                <div className={`ml-6 p-4 rounded-2xl border transition-all duration-300 flex-1 ${
+                                                    isActive 
+                                                        ? 'bg-white shadow-[0_10px_25px_rgba(13,148,136,0.1)] border-teal-200/50 translate-x-1' 
+                                                        : 'bg-white/40 border-transparent hover:bg-white/80'
+                                                }`}>
+                                                    <div className="flex justify-between items-start">
+                                                        <h3 className={`font-bold text-sm ${isActive ? 'text-teal-900 font-serif' : isCompleted ? 'text-gray-900' : 'text-gray-400'}`}>
+                                                            {step.status}
+                                                        </h3>
+                                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                                                            isActive 
+                                                                ? 'bg-teal-100 text-teal-800 animate-pulse' 
+                                                                : isCompleted 
+                                                                    ? 'bg-emerald-50 text-emerald-700' 
+                                                                    : 'bg-gray-100 text-gray-400'
+                                                        }`}>
+                                                            {isActive ? 'Current' : isCompleted ? 'Done' : 'Pending'}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-gray-500 mt-1">{step.date}</p>
+                                                </div>
+                                            </div>
+                                        );
+                                    });
+                                })()}
                             </div>
                         </div>
+
+                        <style>{`
+                            @keyframes bounceGentle {
+                                0%, 100% { transform: translateY(0); }
+                                50% { transform: translateY(-4px); }
+                            }
+                            .animate-bounce-gentle {
+                                animation: bounceGentle 2s ease-in-out infinite;
+                            }
+
+                            @keyframes wiggle {
+                                0%, 100% { transform: rotate(0deg); }
+                                25% { transform: rotate(-8deg); }
+                                75% { transform: rotate(8deg); }
+                            }
+                            .animate-wiggle {
+                                animation: wiggle 1s ease-in-out infinite;
+                            }
+
+                            .animated-progress-bar-vertical {
+                                background: linear-gradient(180deg, #065f46, #0d9488, #2dd4bf, #065f46);
+                                background-size: 100% 300%;
+                                animation: flowVertical 4s linear infinite;
+                            }
+                            @keyframes flowVertical {
+                                0% { background-position: 50% 0%; }
+                                100% { background-position: 50% 300%; }
+                            }
+                        `}</style>
                     </div>
                 )}
             </div>

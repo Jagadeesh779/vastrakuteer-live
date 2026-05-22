@@ -31,6 +31,8 @@ import MobileNav from './components/MobileNav';
 import VisitorPopup from './components/VisitorPopup';
 import AnnouncementBar from './components/AnnouncementBar';
 import FloatingAdPopup from './components/FloatingAdPopup';
+import ThemeOverlay from './components/ThemeOverlay';
+import StyleAdvisorModal from './components/StyleAdvisorModal';
 import { FavoritesProvider } from './context/FavoritesContext';
 import { CartProvider } from './context/CartContext';
 import { ToastProvider } from './context/ToastContext';
@@ -109,6 +111,8 @@ function Layout() {
             {!isAuthPage && <MobileNav />}
             {!isAuthPage && <VisitorPopup />}
             {!isAuthPage && <FloatingAdPopup />}
+            {!isAuthPage && <ThemeOverlay />}
+            {!isAuthPage && <StyleAdvisorModal />}
             {!isAuthPage && <Footer />}
         </div>
     );
