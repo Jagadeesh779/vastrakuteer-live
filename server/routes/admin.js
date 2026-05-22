@@ -159,27 +159,42 @@ router.post('/trigger-flash-sale', admin, async (req, res) => {
         const activeEvent = getActiveEvent();
         const isLiveNow = activeEvent && activeEvent.id === event.id;
 
-        let sent = 0, failed = 0;
-        for (const recipient of recipients) {
-            try {
-                await transporter.sendMail({
-                    from: `"Vastra Kuteer" <${process.env.EMAIL_USER}>`,
-                    to: recipient.email,
-                    subject: isLiveNow
-                        ? `${event.emoji} Flash Sale! ${event.name} — Flat ${event.discount}% OFF is LIVE Today!`
-                        : `${event.emoji} Flash Sale! ${event.name} — ${event.discount}% OFF Starts Tomorrow!`,
-                    html: buildFlashEmail(event, recipient.name, isLiveNow)
-                });
-                sent++;
-            } catch (e) {
-                failed++;
-                console.error(`[MANUAL FLASH] Failed for ${recipient.email}:`, e.message);
-            }
-        }
-
+        // Respond immediately to prevent HTTP connection timeout
         res.json({ 
-            message: `Flash sale email blast complete for "${event.name}"!`,
-            event: event.name, coupon: event.coupon, sent, failed, totalUsers: recipients.length 
+            success: true,
+            message: `Flash sale email blast initiated in the background for "${event.name}"!`,
+            event: event.name, 
+            coupon: event.coupon, 
+            totalUsers: recipients.length 
+        });
+
+        // Run sending loop asynchronously in the background
+        (async () => {
+            let sent = 0, failed = 0;
+            for (const recipient of recipients) {
+                try {
+                    await transporter.sendMail({
+                        from: `"Vastra Kuteer" <${process.env.EMAIL_USER}>`,
+                        to: recipient.email,
+                        subject: isLiveNow
+                            ? `${event.emoji} Flash Sale! ${event.name} — Flat ${event.discount}% OFF is LIVE Today!`
+                            : `${event.emoji} Flash Sale! ${event.name} — ${event.discount}% OFF Starts Tomorrow!`,
+                        html: buildFlashEmail(event, recipient.name, isLiveNow)
+                    });
+                    sent++;
+                } catch (e) {
+                    failed++;
+                    console.error(`[MANUAL FLASH] Failed for ${recipient.email}:`, e.message);
+                }
+            }
+            console.log(`\n══════════════════════════════════════`);
+            console.log(`  📨 ${event.emoji} ${event.name} Manual Email Blast Complete!`);
+            console.log(`  ✅ Sent    : ${sent}`);
+            console.log(`  ❌ Failed  : ${failed}`);
+            console.log(`  👥 Total   : ${recipients.length}`);
+            console.log(`══════════════════════════════════════\n`);
+        })().catch(err => {
+            console.error('[MANUAL FLASH] Background process error:', err.message);
         });
     } catch (err) {
         console.error('[MANUAL FLASH] Error:', err);
