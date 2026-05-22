@@ -27,8 +27,8 @@ async function triggerEmails() {
     const token = loginData.token;
     console.log('✅ Logged in as admin!');
 
-    // Trigger Akshaya Tritiya email blast
-    console.log('\n📨 Sending Akshaya Tritiya emails to all users...');
+    // Trigger Summer Sale email blast
+    console.log('\n📨 Sending Summer Sale emails to all users...');
 
     const emailRes = await fetch(`${BASE_URL}/api/admin/trigger-flash-sale`, {
         method: 'POST',
@@ -44,7 +44,7 @@ async function triggerEmails() {
     console.log(JSON.stringify(emailData, null, 2));
 
     if (emailRes.ok) {
-        console.log(`\n🎉 SUCCESS! ${emailData.sent} emails sent for ${emailData.event || 'Akshaya Tritiya'}`);
+        console.log(`\n🎉 SUCCESS! ${emailData.sent} emails sent for ${emailData.event || 'Summer Sale'}`);
         if (emailData.failed > 0) console.log(`⚠️  ${emailData.failed} failed`);
     } else {
         console.error('❌ Failed:', emailData.message);
