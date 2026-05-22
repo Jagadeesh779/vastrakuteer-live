@@ -156,14 +156,19 @@ router.post('/trigger-flash-sale', admin, async (req, res) => {
             return res.status(200).json({ message: 'No registered users found to email.', sent: 0 });
         }
 
+        const activeEvent = getActiveEvent();
+        const isLiveNow = activeEvent && activeEvent.id === event.id;
+
         let sent = 0, failed = 0;
         for (const recipient of recipients) {
             try {
                 await transporter.sendMail({
                     from: `"Vastra Kuteer" <${process.env.EMAIL_USER}>`,
                     to: recipient.email,
-                    subject: `${event.emoji} Flash Sale! ${event.name} — ${event.discount}% OFF Starts Tomorrow!`,
-                    html: buildFlashEmail(event, recipient.name)
+                    subject: isLiveNow
+                        ? `${event.emoji} Flash Sale! ${event.name} — Flat ${event.discount}% OFF is LIVE Today!`
+                        : `${event.emoji} Flash Sale! ${event.name} — ${event.discount}% OFF Starts Tomorrow!`,
+                    html: buildFlashEmail(event, recipient.name, isLiveNow)
                 });
                 sent++;
             } catch (e) {

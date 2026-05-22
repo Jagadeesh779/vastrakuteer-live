@@ -18,7 +18,7 @@ const formatEventDate = (dateObj) => {
  * @param {string} name   - Recipient's name (or "Valued Customer")
  * @returns {string} HTML string
  */
-const buildFlashEmail = (event, name = 'Valued Customer') => `
+const buildFlashEmail = (event, name = 'Valued Customer', isLiveNow = false) => `
 <!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -34,20 +34,20 @@ const buildFlashEmail = (event, name = 'Valued Customer') => `
             <p style="color:rgba(255,255,255,0.8);font-size:13px;margin:0;letter-spacing:3px;text-transform:uppercase;">Ethnic Wear | Handcrafted with Love</p>
           </td>
         </tr>
-
+ 
         <!-- Flash Badge -->
         <tr>
           <td style="background:#FEF3C7;padding:12px 40px;text-align:center;border-bottom:2px solid #F59E0B;">
             <span style="color:#92400E;font-weight:700;font-size:14px;letter-spacing:1px;">⚡ FLASH SALE ALERT ⚡</span>
           </td>
         </tr>
-
+ 
         <!-- Main Content -->
         <tr>
           <td style="padding:40px 40px 30px;text-align:center;">
             <div style="font-size:56px;margin-bottom:12px;">${event.emoji}</div>
             <h2 style="color:#1f2937;font-size:26px;margin:0 0 10px;">
-              ${event.name} starts Tomorrow! 🎉
+              ${event.name} ${isLiveNow ? 'is LIVE Today!' : 'starts Tomorrow!'} 🎉
             </h2>
 
             <!-- SALE DATE RANGE -->
