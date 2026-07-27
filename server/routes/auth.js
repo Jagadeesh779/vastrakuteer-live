@@ -48,7 +48,7 @@ const logDebug = (msg) => {
 // @desc    Register a new user
 // @access  Public
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || 'vastra_kuteer_secret_2026_secure_key_99';
 
 // Helper to send token response
 const sendTokenResponse = (user, statusCode, res, msg, isNewUser = false) => {

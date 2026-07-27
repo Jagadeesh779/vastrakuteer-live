@@ -498,6 +498,13 @@ const AdminDashboard = () => {
             closeProductModal();
         } catch (err) {
             console.error('Error saving product:', err);
+            if (err.response?.status === 401 || err.response?.data?.msg === 'Token is not valid') {
+                alert('Session expired or invalid login token. Please log in again to refresh your admin session.');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                navigate('/login');
+                return;
+            }
             const serverMsg = typeof err.response?.data === 'string'
                 ? err.response.data
                 : (err.response?.data?.message || err.response?.data?.msg || err.message);
