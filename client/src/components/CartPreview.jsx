@@ -4,7 +4,7 @@ import { ShoppingBag, X, Plus, Minus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 const CartPreview = ({ onClose }) => {
-    const { cartItems, removeFromCart, updateQuantity } = useCart();
+    const { cartItems, removeFromCart, updateQuantity, getAvailableStock } = useCart();
     const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     return (
@@ -23,21 +23,33 @@ const CartPreview = ({ onClose }) => {
             ) : (
                 <>
                     <div className="max-h-64 overflow-y-auto divide-y divide-gray-50">
-                        {cartItems.map((item) => (
-                            <div key={`${item._id}-${item.selectedSize}`} className="flex gap-3 p-3 hover:bg-violet-50/50 transition-colors">
-                                <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-semibold text-gray-900 truncate">{item.name}</p>
-                                    <p className="text-[10px] text-gray-500">{item.selectedSize && `Size: ${item.selectedSize} ·`} ₹{item.price}</p>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <button onClick={() => updateQuantity(item._id, item.selectedSize, item.quantity - 1)} disabled={item.quantity <= 1} className="p-0.5 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-40"><Minus className="h-3 w-3" /></button>
-                                        <span className="text-xs font-bold">{item.quantity}</span>
-                                        <button onClick={() => updateQuantity(item._id, item.selectedSize, item.quantity + 1)} className="p-0.5 rounded bg-gray-100 hover:bg-gray-200"><Plus className="h-3 w-3" /></button>
+                        {cartItems.map((item) => {
+                            const maxStock = getAvailableStock ? getAvailableStock(item) : 99;
+                            const isAtMax = item.quantity >= maxStock;
+
+                            return (
+                                <div key={`${item._id}-${item.selectedSize}`} className="flex gap-3 p-3 hover:bg-violet-50/50 transition-colors">
+                                    <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-semibold text-gray-900 truncate">{item.name}</p>
+                                        <p className="text-[10px] text-gray-500">{item.selectedSize && `Size: ${item.selectedSize} ·`} ₹{item.price}</p>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <button onClick={() => updateQuantity(item._id, item.selectedSize, item.quantity - 1)} disabled={item.quantity <= 1} className="p-0.5 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-40"><Minus className="h-3 w-3" /></button>
+                                            <span className="text-xs font-bold">{item.quantity}</span>
+                                            <button
+                                                onClick={() => updateQuantity(item._id, item.selectedSize, item.quantity + 1)}
+                                                disabled={isAtMax}
+                                                className="p-0.5 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-40"
+                                                title={isAtMax ? `Maximum available stock: ${maxStock}` : 'Add one more'}
+                                            >
+                                                <Plus className="h-3 w-3" />
+                                            </button>
+                                        </div>
                                     </div>
+                                    <button onClick={() => removeFromCart(item._id, item.selectedSize)} className="text-red-300 hover:text-red-500 self-start mt-1"><X className="h-3.5 w-3.5" /></button>
                                 </div>
-                                <button onClick={() => removeFromCart(item._id, item.selectedSize)} className="text-red-300 hover:text-red-500 self-start mt-1"><X className="h-3.5 w-3.5" /></button>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                     <div className="p-3 border-t border-gray-100">
                         <div className="flex justify-between text-sm font-bold text-gray-900 mb-2.5">

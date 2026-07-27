@@ -9,7 +9,7 @@ import { API_URL } from '../config';
 import { useToast } from '../context/ToastContext';
 
 const Cart = () => {
-    const { cartItems, removeFromCart, clearCart, updateQuantity } = useCart();
+    const { cartItems, removeFromCart, clearCart, updateQuantity, getAvailableStock } = useCart();
     const { showToast } = useToast();
     const navigate = useNavigate();
     const [couponCode, setCouponCode] = React.useState('');
@@ -245,7 +245,7 @@ const Cart = () => {
                                             <button
                                                 onClick={() => updateQuantity(item._id, item.selectedSize, item.quantity + 1)}
                                                 className="p-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors disabled:opacity-50"
-                                                disabled={item.quantity >= (item.selectedSize && item.sizes ? item.sizes[item.selectedSize] : item.count)}
+                                                disabled={item.quantity >= (getAvailableStock ? getAvailableStock(item) : (item.selectedSize && item.sizes ? item.sizes[item.selectedSize] : item.count))}
                                             >
                                                 <Plus className="h-4 w-4" />
                                             </button>
