@@ -459,8 +459,29 @@ const AdminDashboard = () => {
     const handleProductSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Create a payload copy
-            const payload = { ...productForm };
+            const token = localStorage.getItem('token');
+            if (token) {
+                axios.defaults.headers.common['x-auth-token'] = token;
+            }
+
+            // Create a payload copy with proper numeric types & fallbacks
+            const payload = {
+                ...productForm,
+                brand: productForm.brand || 'Vastra Kuteer',
+                category: productForm.category || 'Sarees',
+                price: Number(productForm.price) || 0,
+                originalPrice: Number(productForm.originalPrice) || Number(productForm.price) || 0,
+                count: Number(productForm.count) || 0
+            };
+
+            if (!payload.name || !payload.name.trim()) {
+                alert('Please enter a Product Name.');
+                return;
+            }
+            if (!payload.image) {
+                alert('Please provide a main Image URL or upload an image.');
+                return;
+            }
 
             // If sizes sum to 0, remove them to prevent backend from overwriting count with 0
             const totalSizeCount = payload.sizes ? Object.values(payload.sizes).reduce((a, b) => a + Number(b), 0) : 0;
@@ -476,8 +497,11 @@ const AdminDashboard = () => {
             fetchData();
             closeProductModal();
         } catch (err) {
-            console.error(err);
-            alert('Error saving product');
+            console.error('Error saving product:', err);
+            const serverMsg = typeof err.response?.data === 'string'
+                ? err.response.data
+                : (err.response?.data?.message || err.response?.data?.msg || err.message);
+            alert(`Error saving product: ${serverMsg || 'Check product fields and permissions.'}`);
         }
     };
 

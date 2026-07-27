@@ -70,12 +70,10 @@ router.post('/', admin, async (req, res) => {
         const product = await newProduct.save();
         res.json(product);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
+        console.error('Save product error:', err.message);
+        res.status(400).json({ message: err.message || 'Error saving product' });
     }
 });
-
-
 
 // @route   PUT /api/products/:id
 // @desc    Update a product
@@ -108,8 +106,8 @@ router.put('/:id', admin, async (req, res) => {
         product = await Product.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true });
         res.json(product);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
+        console.error('Update product error:', err.message);
+        res.status(400).json({ message: err.message || 'Error updating product' });
     }
 });
 
