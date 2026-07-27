@@ -38,27 +38,36 @@ const Cart = () => {
     }, []);
 
     const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const discountAmount = Math.round(total * discount / 100);
-    const grandTotal = total - discountAmount;
-    const shippingFee = (grandTotal > 0 && grandTotal < 2999) ? 149 : 0;
+    const discountAmount = Math.round((total * discount) / 100);
+    const grandTotal = Math.max(0, total - discountAmount);
+    // Free shipping threshold is evaluated on Cart Subtotal (total) so applying coupons never revokes free shipping
+    const shippingFee = (total > 0 && total < 2999) ? 149 : 0;
     const finalTotal = grandTotal + shippingFee;
 
     const COUPONS = { 
-        'VASTRA10': 10, 'NEWUSER20': 20,
+        'VASTRA10': 10, 'VASTRA15': 15, 'VASTRA20': 20,
+        'NEWUSER20': 20, 'WELCOME10': 10, 'REFERRAL15': 15, 'VK15': 15,
+        'FIRST10': 10, 'FIRST15': 15,
         'NEWYEAR20': 20, 'SANKRANTI20': 20, 'REPUBLIC20': 20,
-        'VDAY20': 20, 'HOLI20': 20, 'UGADI20': 20, 'EID20': 20,
-        'RAMNAVAMI15': 15, 'SUMMER15': 15, 'EIDADHA20': 20,
+        'VDAY20': 20, 'LOVE20': 20, 'HOLI20': 20, 'UGADI20': 20, 'EID20': 20,
+        'RAMNAVAMI15': 15, 'HARVEST20': 20, 'AKSHAYA20': 20, 'SUMMER15': 15, 'EIDADHA20': 20,
         'RAKHI15': 15, 'AZADI20': 20, 'KRISHNA15': 15,
         'GANESH20': 20, 'ONAM15': 15, 'NAVRATRI20': 20,
-        'DUSSEHRA20': 20, 'CHAUTH15': 15, 'DHANTERAS15': 15,
+        'DUSSEHRA20': 20, 'CHAUTH15': 15, 'DHAN15': 15, 'DHANTERAS15': 15,
         'DIWALI20': 20, 'BHAIDOOJ15': 15, 'XMAS20': 20, 'YEAREND20': 20
     };
 
     const applyCoupon = () => {
         const code = couponCode.trim().toUpperCase();
+        const user = JSON.parse(localStorage.getItem('user'));
+        const userEarned = user?.earnedCoupons || [];
+
         if (COUPONS[code]) {
             setDiscount(COUPONS[code]);
             setCouponMsg(`✅ Coupon applied! You save ${COUPONS[code]}%`);
+        } else if (userEarned.includes(code)) {
+            setDiscount(15);
+            setCouponMsg(`✅ Referral Reward Coupon applied! You save 15%`);
         } else {
             setDiscount(0);
             setCouponMsg('❌ Invalid coupon code. Try VASTRA10 or NEWUSER20');
@@ -166,8 +175,10 @@ const Cart = () => {
                                 shippingFee
                             };
 
-                            // Cookie handles auth automatically
-                            const startOrder = await axios.post(`${API_URL}/api/orders`, orderData);
+                            const token = localStorage.getItem('token');
+                            const startOrder = await axios.post(`${API_URL}/api/orders`, orderData, {
+                                headers: token ? { 'x-auth-token': token } : {}
+                            });
 
                             if (startOrder.status === 201) {
                                 showToast(`🎉 Payment successful! Order placed. ID: #${startOrder.data._id.slice(-6).toUpperCase()}`, 'success');
