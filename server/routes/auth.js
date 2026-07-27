@@ -14,22 +14,34 @@ const { getActiveEvent } = require('../utils/eventCalendar');
 global.registerOTPs = global.registerOTPs || new Map();
 global.loginOTPs = global.loginOTPs || new Map();
 
+const DEFAULT_EMAIL_USER = process.env.EMAIL_USER || 'vastrakuteer9@gmail.com';
+const DEFAULT_EMAIL_PASS = process.env.EMAIL_PASS || 'lisxqpgpcqjuqkpp';
+
+const getTransporter = () => {
+    return nodemailer.createTransport({
+        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+            user: DEFAULT_EMAIL_USER,
+            pass: DEFAULT_EMAIL_PASS
+        }
+    });
+};
+
 // Helper to send welcome email asynchronously (non-blocking)
 const sendWelcomeEmail = async (name, email) => {
     try {
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
         const activeEvent = getActiveEvent();
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-        });
+        const transporter = getTransporter();
         await transporter.sendMail({
-            from: `"Vastra Kuteer" <${process.env.EMAIL_USER}>`,
+            from: `"Vastra Kuteer" <${DEFAULT_EMAIL_USER}>`,
             to: email,
             subject: `Welcome to Vastra Kuteer, ${name}! 🎉`,
             html: buildWelcomeEmail(name, activeEvent)
         });
-        console.log(`[WELCOME EMAIL] Sent to ${email}`);
+        console.log(`[WELCOME EMAIL] Sent successfully to ${email}`);
     } catch (err) {
         console.error(`[WELCOME EMAIL] Failed for ${email}:`, err.message);
     }
@@ -120,16 +132,10 @@ router.post('/send-register-otp', async (req, res) => {
         global.registerOTPs.set(email, { otp, expires: Date.now() + 10 * 60 * 1000 });
 
         // Setup Nodemailer
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
-        });
+        const transporter = getTransporter();
 
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: `"Vastra Kuteer" <${DEFAULT_EMAIL_USER}>`,
             to: email,
             subject: 'Vastra Kuteer Registration OTP',
             html: `<h2>Welcome to Vastra Kuteer!</h2>
@@ -293,16 +299,10 @@ router.post('/send-login-otp', async (req, res) => {
         global.loginOTPs.set(email, { otp, expires: Date.now() + 5 * 60 * 1000 });
 
         // Setup Nodemailer
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
-        });
+        const transporter = getTransporter();
 
         const mailOptions = {
-            from: `"Vastra Kuteer" <${process.env.EMAIL_USER}>`,
+            from: `"Vastra Kuteer" <${DEFAULT_EMAIL_USER}>`,
             to: email,
             subject: 'Vastra Kuteer Login OTP',
             html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
@@ -404,8 +404,8 @@ router.post('/forgot-password', async (req, res) => {
         }
 
         // 3. Create the Reset URL
-        // In a real app, this should be the frontend URL
-        const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
+        const clientUrl = req.headers.origin || 'https://vastrakuteer.in';
+        const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
 
         try {
             const sendEmail = require('../utils/sendEmail');
