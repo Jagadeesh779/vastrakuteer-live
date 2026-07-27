@@ -239,8 +239,6 @@ router.delete('/:id/reviews/:reviewId', admin, async (req, res) => {
     }
 });
 
-module.exports = router;
-
 // Dummy data for seeding
 const dummyTrending = [
     { brand: "Vastra Kuteer", name: "Royal Banarasi Silk", price: 5999, originalPrice: 9999, rating: 4.8, reviews: 42, image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=2574&auto=format&fit=crop" },
@@ -252,6 +250,5 @@ const dummyTrending = [
     { brand: "Vastra Kuteer", name: "Paithani Silk", price: 8999, originalPrice: 14999, rating: 5.0, reviews: 32, image: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?q=80&w=2070&auto=format&fit=crop" },
     { brand: "Ethnic Charm", name: "Tussar Silk", price: 3899, originalPrice: 5699, rating: 4.6, reviews: 40, image: "https://images.unsplash.com/photo-1621640786029-22ad3168d660?q=80&w=2070&auto=format&fit=crop" }
 ];
-
 
 module.exports = router;

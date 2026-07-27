@@ -77,20 +77,29 @@ const AdminDashboard = () => {
     };
     // ─────────────────────────────────────────────────────────────────────────
 
-    // Check admin role
+    // Check admin role & configure auth headers
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem('user'));
+        const token = localStorage.getItem('token');
         if (!user || user.role !== 'admin') {
             navigate('/login');
+            return;
+        }
+        if (token) {
+            axios.defaults.headers.common['x-auth-token'] = token;
         }
     }, [navigate]);
 
     const fetchData = async () => {
         try {
+            const token = localStorage.getItem('token');
+            if (token) {
+                axios.defaults.headers.common['x-auth-token'] = token;
+            }
             const prodRes = await axios.get(`${API_URL}/api/products`);
             setProducts(prodRes.data);
 
-            // Fetch Orders (Protected - Cookie handled automatically)
+            // Fetch Orders
             const ordersRes = await axios.get(`${API_URL}/api/orders`);
             setOrders(ordersRes.data);
 
@@ -611,10 +620,13 @@ const AdminDashboard = () => {
                 }],
                 totalAmount: Number(sellForm.price) * Number(sellForm.qty), // Calculate total with custom price
                 shippingAddress: {
-                    address: 'In Store',
-                    city: 'N/A',
-                    postalCode: 'N/A',
-                    country: 'India'
+                    fullName: 'In-Store Customer',
+                    street: 'In Store Purchase',
+                    city: 'Local Store',
+                    state: 'Telangana',
+                    zip: '500001',
+                    phone: '0000000000',
+                    email: 'admin@vastrakuteer.com'
                 },
                 paymentResult: {
                     id: 'OFFLINE_SALE',

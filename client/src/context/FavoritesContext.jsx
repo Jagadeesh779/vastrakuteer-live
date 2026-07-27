@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
+import { API_URL } from '../config';
+
 const FavoritesContext = createContext();
 
 export const useFavorites = () => useContext(FavoritesContext);
@@ -42,7 +44,7 @@ export const FavoritesProvider = ({ children }) => {
         if (!activeUser || !activeUser.email) return;
 
         try {
-            const response = await fetch('http://localhost:5000/api/user/get-favorites', {
+            const response = await fetch(`${API_URL}/api/user/get-favorites`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -70,7 +72,7 @@ export const FavoritesProvider = ({ children }) => {
         }
 
         try {
-            const response = await fetch('http://localhost:5000/api/user/add-favorite', {
+            const response = await fetch(`${API_URL}/api/user/add-favorite`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -95,7 +97,7 @@ export const FavoritesProvider = ({ children }) => {
         setFavorites(favorites.filter(id => id !== productId));
 
         try {
-            const response = await fetch('http://localhost:5000/api/user/remove-favorite', {
+            const response = await fetch(`${API_URL}/api/user/remove-favorite`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
