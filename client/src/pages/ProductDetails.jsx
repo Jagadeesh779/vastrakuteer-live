@@ -115,7 +115,9 @@ const ProductDetails = () => {
     }
     if (!product) return <div className="text-center py-20 text-xl">Product not found</div>;
 
-    const discountPercentage = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
+    const discountPercentage = (product.originalPrice && product.originalPrice > product.price)
+        ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+        : 0;
 
     return (
         <div className="min-h-screen py-10" style={{ background: 'linear-gradient(135deg, #F0FDFA 0%, #E0F2F1 100%)' }}>
@@ -176,10 +178,12 @@ const ProductDetails = () => {
 
                         <div className="border-t border-b border-gray-100 py-4 my-4">
                             <div className="flex items-baseline space-x-4">
-                                <span className="text-red-600 text-2xl font-light">-{discountPercentage}%</span>
+                                {discountPercentage > 0 && (
+                                    <span className="text-red-600 text-2xl font-light">-{discountPercentage}%</span>
+                                )}
                                 <span className="text-4xl font-bold text-gray-900">₹{product.price}</span>
                             </div>
-                            {product.originalPrice && (
+                            {product.originalPrice && product.originalPrice > product.price && (
                                 <p className="text-gray-500 text-sm mt-1">M.R.P.: <span className="line-through">₹{product.originalPrice}</span></p>
                             )}
                             <p className="text-gray-900 font-medium text-sm mt-2">Inclusive of all taxes</p>

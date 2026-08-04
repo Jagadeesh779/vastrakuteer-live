@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '../config';
 import './Login.css'; // Reusing the same aurora styles
 import logoImage from '../assets/logo.png';
 
@@ -37,7 +38,7 @@ const ResetPassword = () => {
 
         setLoading(true);
         try {
-            const res = await axios.post('/api/auth/reset-password', {
+            const res = await axios.post(`${API_URL}/api/auth/reset-password`, {
                 token,
                 newPassword: password
             });

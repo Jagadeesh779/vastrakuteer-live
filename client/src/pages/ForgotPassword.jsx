@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '../config';
 import './Login.css'; // Reusing the same aurora styles
 import logoImage from '../assets/logo.png';
 
@@ -22,7 +23,7 @@ const ForgotPassword = () => {
 
         setLoading(true);
         try {
-            const res = await axios.post('/api/auth/forgot-password', { email });
+            const res = await axios.post(`${API_URL}/api/auth/forgot-password`, { email });
             setMessage(res.data.message || 'Password reset link sent to your email.');
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to process request');

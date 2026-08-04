@@ -194,6 +194,21 @@ const AdminDashboard = () => {
         addNotif('📥 Orders exported to CSV!', 'success');
     };
 
+    // ── Trigger Event Email Blast ────────────────────────────────────────────
+    const handleTriggerFlashSale = async (eventId = '') => {
+        if (!window.confirm('Send Event Sale marketing email blast to ALL registered users?')) return;
+        try {
+            const res = await axios.post(`${API_URL}/api/admin/trigger-flash-sale`, { eventId });
+            addNotif(`🚀 ${res.data.message}`, 'success');
+            alert(`✅ Event Email Blast Started!\n\nEvent: ${res.data.event}\nRecipients: ${res.data.totalUsers} registered users\nCoupon Code: ${res.data.coupon}`);
+        } catch (err) {
+            console.error(err);
+            const msg = err.response?.data?.message || err.message || 'Failed to trigger event email blast';
+            addNotif('❌ Failed to launch event email blast', 'error');
+            alert(`Error launching event blast: ${msg}`);
+        }
+    };
+
     // ── Print Shipping Label ─────────────────────────────────────────────────
     const handlePrintLabel = (order) => {
         const win = window.open('', '_blank');
@@ -470,7 +485,7 @@ const AdminDashboard = () => {
                 brand: productForm.brand || 'Vastra Kuteer',
                 category: productForm.category || 'Sarees',
                 price: Number(productForm.price) || 0,
-                originalPrice: Number(productForm.originalPrice) || Number(productForm.price) || 0,
+                originalPrice: Number(productForm.originalPrice) || 0,
                 count: Number(productForm.count) || 0
             };
 
@@ -828,6 +843,13 @@ const AdminDashboard = () => {
                                     {csvImporting ? 'Importing...' : 'CSV Import'}
                                 </button>
                                 <button
+                                    onClick={() => handleTriggerFlashSale()}
+                                    className="bg-amber-50 text-amber-700 px-3 py-1.5 rounded-md hover:bg-amber-100 transition-colors text-sm border border-amber-200 flex items-center gap-1 font-medium"
+                                    title="Send Flash / Event Sale Email Blast to ALL Registered Users"
+                                >
+                                    <Mail className="h-4 w-4" /> Send Event Email Blast
+                                </button>
+                                <button
                                     onClick={async () => {
                                         if (window.confirm('Are you sure you want to clear ALL products? This cannot be undone.')) {
                                             try { await axios.post(`${API_URL}/api/products/clear`); fetchData(); } catch (e) { console.error(e); }
@@ -914,7 +936,7 @@ const AdminDashboard = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm text-gray-900">₹{product.price}</div>
-                                            {product.originalPrice && <div className="text-xs text-gray-500 line-through">₹{product.originalPrice}</div>}
+                                            {product.originalPrice && product.originalPrice > product.price && <div className="text-xs text-gray-500 line-through">₹{product.originalPrice}</div>}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center gap-2">

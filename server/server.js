@@ -120,10 +120,13 @@ cron.schedule('0 8 * * *', async () => {
 }, { timezone: 'Asia/Kolkata' });
 
 // ── Flash Sale Marketing Cron (9 AM every day) ───────────────────────────────
-const { getUpcomingEvent, EVENTS } = require('./utils/eventCalendar');
+const { getUpcomingEvent, getActiveEvent, EVENTS } = require('./utils/eventCalendar');
 const { buildFlashEmail } = require('./utils/emailTemplates');
 const { getAllUsers } = require('./utils/jsonDb');
 const User = require('./models/User');
+
+const DEFAULT_FLASH_EMAIL_USER = process.env.EMAIL_USER || 'vastrakuteer9@gmail.com';
+const DEFAULT_FLASH_EMAIL_PASS = process.env.EMAIL_PASS || 'lisxqpgpcqjuqkpp';
 
 /**
  * Core function: gather all user emails from DB and send flash sale blast.
@@ -131,14 +134,12 @@ const User = require('./models/User');
  * Called by the daily cron AND by the admin manual-trigger endpoint.
  */
 const sendFlashSaleEmails = async (event) => {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.warn('[FLASH EMAIL] EMAIL_USER/EMAIL_PASS not configured.');
-        return { sent: 0, failed: 0 };
-    }
-
     const transporter = nodemailer.createTransport({
         service: 'gmail',
-        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: { user: DEFAULT_FLASH_EMAIL_USER, pass: DEFAULT_FLASH_EMAIL_PASS }
     });
 
     // Collect emails from both MongoDB and JSON fallback
@@ -166,7 +167,7 @@ const sendFlashSaleEmails = async (event) => {
     for (const recipient of recipients) {
         try {
             await transporter.sendMail({
-                from: `"Vastra Kuteer" <${process.env.EMAIL_USER}>`,
+                from: `"Vastra Kuteer" <${DEFAULT_FLASH_EMAIL_USER}>`,
                 to: recipient.email,
                 subject: `${event.emoji} ${event.name} Sale — Flat ${event.discount}% OFF! Code: ${event.coupon}`,
                 html: buildFlashEmail(event, recipient.name)
@@ -185,16 +186,16 @@ const sendFlashSaleEmails = async (event) => {
 // Export so admin route can call it manually
 module.exports.sendFlashSaleEmails = sendFlashSaleEmails;
 
-// ── Daily cron: fires at 9 AM IST, auto-detects tomorrow's event ─────────────
+// ── Daily cron: fires at 9 AM IST, auto-detects upcoming or active event ─────
 cron.schedule('0 9 * * *', async () => {
     try {
-        const upcomingEvent = getUpcomingEvent(); // checks ALL 24 events
-        if (!upcomingEvent) {
-            console.log('[FLASH EMAIL CRON] No event starting tomorrow. Skipping.');
+        const eventToSend = getUpcomingEvent() || getActiveEvent(); // checks ALL 24 events
+        if (!eventToSend) {
+            console.log('[FLASH EMAIL CRON] No active or upcoming event. Skipping.');
             return;
         }
-        console.log(`[FLASH EMAIL CRON] 🎉 Event tomorrow: ${upcomingEvent.emoji} ${upcomingEvent.name}. Blasting emails...`);
-        await sendFlashSaleEmails(upcomingEvent);
+        console.log(`[FLASH EMAIL CRON] 🎉 Event: ${eventToSend.emoji} ${eventToSend.name}. Blasting emails to all users...`);
+        await sendFlashSaleEmails(eventToSend);
     } catch (err) {
         console.error('[FLASH EMAIL CRON] Error:', err.message);
     }

@@ -130,25 +130,25 @@ const Profile = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            ${order.items.map(item => `
+                            ${(order.items || []).map(item => `
                                 <tr>
                                     <td>
                                         <div style="font-weight: 600; color: #111827;">${item.name}</div>
                                     </td>
                                     <td style="text-align: center;">${item.selectedSize || '-'}</td>
-                                    <td style="text-align: center;">${item.qty}</td>
-                                    <td style="text-align: right;">₹${item.price.toFixed(2)}</td>
-                                    <td style="text-align: right; font-weight: 600;">₹${(item.price * item.qty).toFixed(2)}</td>
+                                    <td style="text-align: center;">${item.qty || 1}</td>
+                                    <td style="text-align: right;">₹${(Number(item.price) || 0).toFixed(2)}</td>
+                                    <td style="text-align: right; font-weight: 600;">₹${((Number(item.price) || 0) * (Number(item.qty) || 1)).toFixed(2)}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
                     </table>
                     
                     <div class="totals-section">
-                        <div class="total-row"><span>Subtotal:</span> <span>₹${(order.items.reduce((s,i) => s + (i.price*i.qty), 0)).toFixed(2)}</span></div>
+                        <div class="total-row"><span>Subtotal:</span> <span>₹${(order.items ? order.items.reduce((s,i) => s + ((Number(i.price) || 0) * (Number(i.qty) || 1)), 0) : (order.totalAmount || 0)).toFixed(2)}</span></div>
                         ${order.couponCode ? `<div class="total-row" style="color: #059669;"><span>Discount (${order.couponCode}):</span> <span>-₹${(order.discountAmount || 0).toFixed(2)}</span></div>` : ''}
                         <div class="total-row"><span>Shipping Fee:</span> <span>${(order.shippingFee || 0) === 0 ? 'FREE' : '₹' + (order.shippingFee || 0).toFixed(2)}</span></div>
-                        <div class="total-row grand"><span>Grand Total:</span> <span>₹${order.totalAmount.toFixed(2)}</span></div>
+                        <div class="total-row grand"><span>Grand Total:</span> <span>₹${(order.totalAmount || 0).toFixed(2)}</span></div>
                     </div>
                     
                     <div class="footer">
@@ -416,7 +416,7 @@ const Profile = () => {
                                         </span>
                                     </div>
                                     <p className="text-sm text-gray-500">Placed on: {new Date(order.createdAt).toLocaleDateString()}</p>
-                                    <p className="text-sm font-semibold text-gray-700 mt-2">Total: ₹{order.totalAmount.toFixed(2)} <span className="text-xs text-gray-400 font-normal">({order.items.length} items)</span></p>
+                                    <p className="text-sm font-semibold text-gray-700 mt-2">Total: ₹{(order.totalAmount || 0).toFixed(2)} <span className="text-xs text-gray-400 font-normal">({(order.items || []).length} items)</span></p>
                                 </div>
                                 <button 
                                     onClick={() => handleDownloadInvoice(order)}

@@ -91,10 +91,14 @@ const ProductCard = ({ product }) => {
                 <h3 className="text-gray-900 font-medium leading-tight mb-1 sm:mb-2 group-hover:text-vastra-teal transition-colors line-clamp-1 text-[8px] sm:text-base">{product.name}</h3>
                 <div className="flex items-baseline flex-wrap gap-1 sm:gap-2">
                     <span className="text-[9px] sm:text-lg font-bold text-gray-900">₹{product.price}</span>
-                    <span className="text-[7px] sm:text-sm text-gray-400 line-through hidden sm:inline">₹{product.originalPrice}</span>
-                    <span className="text-[6px] sm:text-xs font-medium text-green-600 px-1 py-0.5 bg-green-50 rounded hidden xs:inline">
-                        -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
-                    </span>
+                    {product.originalPrice && product.originalPrice > product.price && (
+                        <>
+                            <span className="text-[7px] sm:text-sm text-gray-400 line-through hidden sm:inline">₹{product.originalPrice}</span>
+                            <span className="text-[6px] sm:text-xs font-medium text-green-600 px-1 py-0.5 bg-green-50 rounded hidden xs:inline">
+                                -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
+                            </span>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

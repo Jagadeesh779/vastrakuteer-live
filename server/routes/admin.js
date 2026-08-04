@@ -33,7 +33,7 @@ router.post('/import-csv', admin, upload.single('file'), async (req, res) => {
                 brand: obj.brand || 'Vastra Kuteer',
                 name: obj.name,
                 price: Number(obj.price) || 0,
-                originalPrice: Number(obj.originalPrice) || Number(obj.price) || 0,
+                originalPrice: Number(obj.originalPrice) || 0,
                 category: obj.category || 'Sarees',
                 image: obj.image || '',
                 count: Number(obj.count) || 10,
@@ -137,9 +137,15 @@ router.post('/trigger-flash-sale', admin, async (req, res) => {
         if (!event) event = getActiveEvent();
         if (!event) return res.status(400).json({ message: 'No event found to promote. Provide eventId in body.' });
 
+        const DEFAULT_ADMIN_EMAIL_USER = process.env.EMAIL_USER || 'vastrakuteer9@gmail.com';
+        const DEFAULT_ADMIN_EMAIL_PASS = process.env.EMAIL_PASS || 'lisxqpgpcqjuqkpp';
+
         const transporter = nodemailer.createTransport({
             service: 'gmail',
-            auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
+            auth: { user: DEFAULT_ADMIN_EMAIL_USER, pass: DEFAULT_ADMIN_EMAIL_PASS }
         });
 
         // Collect all users
@@ -174,7 +180,7 @@ router.post('/trigger-flash-sale', admin, async (req, res) => {
             for (const recipient of recipients) {
                 try {
                     await transporter.sendMail({
-                        from: `"Vastra Kuteer" <${process.env.EMAIL_USER}>`,
+                        from: `"Vastra Kuteer" <${DEFAULT_ADMIN_EMAIL_USER}>`,
                         to: recipient.email,
                         subject: isLiveNow
                             ? `${event.emoji} Flash Sale! ${event.name} — Flat ${event.discount}% OFF is LIVE Today!`
