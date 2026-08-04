@@ -30,20 +30,40 @@ const getTransporter = () => {
     });
 };
 
-// Helper to send welcome email asynchronously (non-blocking)
+// Helper to send welcome email
 const sendWelcomeEmail = async (name, email) => {
     try {
         const activeEvent = getActiveEvent();
-        const transporter = getTransporter();
-        await transporter.sendMail({
+        const mailOptions = {
             from: `"Vastra Kuteer" <${DEFAULT_EMAIL_USER}>`,
             to: email,
             subject: `Welcome to Vastra Kuteer, ${name}! 🎉`,
             html: buildWelcomeEmail(name, activeEvent)
-        });
-        console.log(`[WELCOME EMAIL] Sent successfully to ${email}`);
+        };
+        try {
+            const transporter = getTransporter();
+            await transporter.sendMail(mailOptions);
+            console.log(`[WELCOME EMAIL] Sent successfully to ${email}`);
+        } catch (primaryErr) {
+            console.warn(`[WELCOME EMAIL] Primary SMTP failed for ${email}: ${primaryErr.message}. Trying fallback...`);
+            const fallbackTransporter = nodemailer.createTransport({
+                service: 'gmail',
+                host: 'smtp.gmail.com',
+                port: 465,
+                secure: true,
+                auth: {
+                    user: 'vastrakuteer9@gmail.com',
+                    pass: 'lisxqpgpcqjuqkpp'
+                }
+            });
+            await fallbackTransporter.sendMail({
+                ...mailOptions,
+                from: `"Vastra Kuteer" <vastrakuteer9@gmail.com>`
+            });
+            console.log(`[WELCOME EMAIL] Sent via fallback SMTP successfully to ${email}`);
+        }
     } catch (err) {
-        console.error(`[WELCOME EMAIL] Failed for ${email}:`, err.message);
+        console.error(`[WELCOME EMAIL] All SMTP attempts failed for ${email}:`, err.message);
     }
 };
 
@@ -195,8 +215,8 @@ router.post('/register', async (req, res) => {
             }
 
             const savedUser = saveUser(user);
-            // Send welcome email (non-blocking)
-            sendWelcomeEmail(fullName, email);
+            // Send welcome email
+            await sendWelcomeEmail(fullName, email);
             sendTokenResponse(savedUser, 201, res, 'User registered successfully (Local Mode)', true);
             return;
         }
@@ -218,9 +238,9 @@ router.post('/register', async (req, res) => {
             }
         }
 
+        // Send welcome email
+        await sendWelcomeEmail(fullName, email);
         sendTokenResponse(user, 201, res, 'User registered successfully', true);
-        // Send welcome email (non-blocking)
-        sendWelcomeEmail(fullName, email);
 
     } catch (err) {
         console.error(err.message);
@@ -539,7 +559,7 @@ router.post('/google', async (req, res) => {
         }
 
         // Send welcome email immediately for brand new Google users
-        if (isNewUser) sendWelcomeEmail(name, email);
+        if (isNewUser) await sendWelcomeEmail(name, email);
 
         sendTokenResponse(user, 200, res, 'Google Login successful', isNewUser);
     } catch (err) {
@@ -580,7 +600,7 @@ router.post('/google-userinfo', async (req, res) => {
             }
         }
         // Send welcome email immediately for brand new Google users
-        if (isNewUser) sendWelcomeEmail(name || email, email);
+        if (isNewUser) await sendWelcomeEmail(name || email, email);
 
         sendTokenResponse(user, 200, res, 'Google Login successful', isNewUser);
     } catch (err) {
