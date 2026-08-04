@@ -143,9 +143,16 @@ router.post('/seed', admin, async (req, res) => {
             return res.json({ msg: 'Mock database reset', products });
         }
         await Product.deleteMany({});
-        // Note: dummyTrending is not imported here, but we don't need it for mongo path if we assume MOCK mostly.
-        // For completeness, one should import it, but I'll skip for now to focus on the fix.
-        res.json({ msg: 'Database seeded functionality limited in Mongo mode without import.' });
+        const seededProducts = dummyTrending.map(p => ({
+            ...p,
+            category: 'Sarees',
+            count: 10,
+            showOnShop: true,
+            showOnHome: true,
+            showOnCollections: true
+        }));
+        const created = await Product.insertMany(seededProducts);
+        res.json({ msg: 'Database seeded successfully', products: created });
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
