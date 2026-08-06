@@ -77,25 +77,25 @@ const Navbar = () => {
 
                             {/* Desktop Navigation */}
                             <div className="flex space-x-7 items-center pt-1 ml-4">
-                                <Link to="/home" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[16px]">
+                                <Link to="/home" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[26px]">
                                     Home
                                     <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-600 transition-all group-hover:w-full"></span>
                                 </Link>
-                                <Link to="/shop" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[16px]">
+                                <Link to="/shop" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[262px]">
                                     Shop
                                     <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-600 transition-all group-hover:w-full"></span>
                                 </Link>
-                                <Link to="/collections" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[16px]">
+                                <Link to="/collections" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[26px]">
                                     Collections
                                     <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-600 transition-all group-hover:w-full"></span>
                                 </Link>
-                                <Link to="/about" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[16px]">
+                                <Link to="/about" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[26px]">
                                     About Us
                                     <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-600 transition-all group-hover:w-full"></span>
                                 </Link>
                                 {/* Admin Link Check */}
                                 {user && user.role === 'admin' && (
-                                    <Link to="/admin" className="text-red-600 font-bold hover:text-red-800 transition-colors text-[16px]">Admin Dashboard</Link>
+                                    <Link to="/admin" className="text-red-600 font-bold hover:text-red-800 transition-colors text-[32px]">Admin Dashboard</Link>
                                 )}
                             </div>
                         </div>
