@@ -68,10 +68,10 @@ const Navbar = () => {
                         <div className="hidden md:flex items-center gap-10">
                             {/* Logo Section */}
                             <Link to="/home" className="flex items-center gap-2 py-1" style={{ textDecoration: 'none' }}>
-                                <img src={logo} alt="Vastra Kuteer" style={{ height: '72px', width: 'auto', objectFit: 'contain' }} />
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1 }}>
-                                    <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '2.5rem', fontWeight: 400, color: '#1a5c3a', lineHeight: 1 }}>Vastra</span>
-                                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.9rem', fontWeight: 700, letterSpacing: '0.35em', color: '#1a1a1a', textTransform: 'uppercase', marginTop: '-3px', marginLeft: '10px' }}>KUTEER</span>
+                                <img src={logo} alt="Vastra Kuteer" style={{ height: '76px', width: 'auto', objectFit: 'contain', transform: 'scale(1.4)', transformOrigin: 'left center' }} />
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1, marginLeft: '14px' }}>
+                                    <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '2.7rem', fontWeight: 400, color: '#1a5c3a', lineHeight: 1 }}>Vastra</span>
+                                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.95rem', fontWeight: 700, letterSpacing: '0.35em', color: '#1a1a1a', textTransform: 'uppercase', marginTop: '-3px', marginLeft: '10px' }}>KUTEER</span>
                                 </div>
                             </Link>
 
@@ -241,10 +241,10 @@ const Navbar = () => {
                         {/* Mobile Logo Group */}
                         <div className="md:hidden flex items-center h-full py-2">
                             <Link to="/home" className="flex items-center gap-1">
-                                <img src={logo} alt="Vastra Kuteer" className="h-40 w-auto object-contain" />
-                                <div className="flex flex-col items-start leading-none">
-                                    <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '2.2rem' }} className="text-emerald-800">Vastra</span>
-                                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.8rem' }} className="font-bold tracking-[0.2em] text-gray-900 uppercase -mt-1 ml-3">KUTEER</span>
+                                <img src={logo} alt="Vastra Kuteer" style={{ height: '65px', width: 'auto', objectFit: 'contain', transform: 'scale(1.3)', transformOrigin: 'left center' }} />
+                                <div className="flex flex-col items-start leading-none ml-3">
+                                    <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '2.3rem' }} className="text-emerald-800">Vastra</span>
+                                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.85rem' }} className="font-bold tracking-[0.2em] text-gray-900 uppercase -mt-1 ml-3">KUTEER</span>
                                 </div>
                             </Link>
                         </div>
@@ -297,10 +297,10 @@ const Navbar = () => {
                             {/* Panel Header */}
                             <div className="flex justify-between items-center p-5 border-b border-gray-100">
                                 <div className="flex items-center gap-2">
-                                    <img src={logo} alt="Logo" className="h-12 w-auto object-contain" />
-                                    <div className="flex flex-col leading-none">
-                                        <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '1.6rem' }} className="text-emerald-800">Vastra</span>
-                                        <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.6rem' }} className="font-bold tracking-[0.25em] text-gray-900 uppercase ml-2">KUTEER</span>
+                                    <img src={logo} alt="Logo" style={{ height: '52px', width: 'auto', objectFit: 'contain', transform: 'scale(1.3)', transformOrigin: 'left center' }} />
+                                    <div className="flex flex-col leading-none ml-2">
+                                        <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '1.8rem' }} className="text-emerald-800">Vastra</span>
+                                        <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.65rem' }} className="font-bold tracking-[0.25em] text-gray-900 uppercase ml-2">KUTEER</span>
                                     </div>
                                 </div>
                                 <button onClick={() => setIsOpen(false)} className="p-2 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition-all">
