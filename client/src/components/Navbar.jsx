@@ -65,18 +65,18 @@ const Navbar = () => {
                     <div className="flex justify-between h-20 items-center gap-8 relative">
 
                         {/* Left Group: Logo + Navigation */}
-                        <div className="hidden md:flex items-center gap-10">
+                        <div className="hidden md:flex items-center gap-14">
                             {/* Logo Section */}
                             <Link to="/home" className="flex items-center gap-2 py-1" style={{ textDecoration: 'none' }}>
                                 <img src={logo} alt="Vastra Kuteer" style={{ height: '76px', width: 'auto', objectFit: 'contain', transform: 'scale(1.4)', transformOrigin: 'left center' }} />
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1, marginLeft: '14px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1, marginLeft: '28px' }}>
                                     <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '2.7rem', fontWeight: 400, color: '#1a5c3a', lineHeight: 1 }}>Vastra</span>
                                     <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.95rem', fontWeight: 700, letterSpacing: '0.35em', color: '#1a1a1a', textTransform: 'uppercase', marginTop: '-3px', marginLeft: '10px' }}>KUTEER</span>
                                 </div>
                             </Link>
 
                             {/* Desktop Navigation */}
-                            <div className="flex space-x-6 items-center pt-1">
+                            <div className="flex space-x-7 items-center pt-1 ml-4">
                                 <Link to="/home" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[16px]">
                                     Home
                                     <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-600 transition-all group-hover:w-full"></span>
