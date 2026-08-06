@@ -68,9 +68,9 @@ const Navbar = () => {
                             {/* Logo Section */}
                             <Link to="/home" className="flex items-center h-full py-0" style={{ textDecoration: 'none' }}>
                                 <img src={logo} alt="Vastra Kuteer" style={{ height: '76px', width: 'auto', objectFit: 'contain', transform: 'scale(1.5)', transformOrigin: 'left center' }} />
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1, marginLeft: '65px' }}>
-                                    <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '2.5rem', fontWeight: 400, color: '#1a5c3a', lineHeight: 1 }}>Vastra</span>
-                                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.35em', color: '#1a1a1a', textTransform: 'uppercase', marginTop: '-3px' }}>KUTEER</span>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 0.9, marginLeft: '130px' }}>
+                                    <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '3.2rem', fontWeight: 400, color: '#1a5c3a', lineHeight: 0.9 }}>Vastra</span>
+                                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '1rem', fontWeight: 700, letterSpacing: '0.36em', color: '#1a1a1a', textTransform: 'uppercase', marginTop: '-4px' }}>KUTEER</span>
                                 </div>
                             </Link>
 
