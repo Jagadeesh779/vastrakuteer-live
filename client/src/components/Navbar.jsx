@@ -66,9 +66,9 @@ const Navbar = () => {
                         {/* Left Group: Logo + Navigation */}
                         <div className="hidden md:flex items-center flex-1">
                             {/* Logo Section */}
-                            <Link to="/home" className="flex items-center h-full py-0 gap-3" style={{ textDecoration: 'none' }}>
+                            <Link to="/home" className="flex items-center h-full py-0 gap-1" style={{ textDecoration: 'none' }}>
                                 <img src={logo} alt="Vastra Kuteer" style={{ height: '74px', width: 'auto', objectFit: 'contain' }} />
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 0.95 }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 0.95, marginLeft: '-4px' }}>
                                     <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '2.8rem', fontWeight: 500, color: '#1a5c3a', lineHeight: 0.95 }}>Vastra</span>
                                     <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.95rem', fontWeight: 700, letterSpacing: '0.35em', color: '#1a1a1a', textTransform: 'uppercase', marginTop: '-2px', marginLeft: '4px' }}>KUTEER</span>
                                 </div>
