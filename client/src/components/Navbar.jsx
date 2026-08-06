@@ -63,39 +63,38 @@ const Navbar = () => {
             <nav style={{ background: '#F8F8FF', borderBottom: '1px solid rgba(13,148,136,0.1)', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }} className="sticky top-0 z-50">
                 <div className="max-w-[90%] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between h-20 items-center gap-8 relative">
-
                         {/* Left Group: Logo + Navigation */}
-                        <div className="hidden md:flex items-center gap-14">
+                        <div className="hidden md:flex items-center gap-8">
                             {/* Logo Section */}
                             <Link to="/home" className="flex items-center gap-2 py-1" style={{ textDecoration: 'none' }}>
-                                <img src={logo} alt="Vastra Kuteer" style={{ height: '76px', width: 'auto', objectFit: 'contain', transform: 'scale(1.4)', transformOrigin: 'left center' }} />
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1, marginLeft: '28px' }}>
-                                    <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '2.7rem', fontWeight: 400, color: '#1a5c3a', lineHeight: 1 }}>Vastra</span>
-                                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.95rem', fontWeight: 700, letterSpacing: '0.35em', color: '#1a1a1a', textTransform: 'uppercase', marginTop: '-3px', marginLeft: '10px' }}>KUTEER</span>
+                                <img src={logo} alt="Vastra Kuteer" style={{ height: '62px', width: 'auto', objectFit: 'contain' }} />
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1, marginLeft: '6px' }}>
+                                    <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '2.5rem', fontWeight: 400, color: '#1a5c3a', lineHeight: 1 }}>Vastra</span>
+                                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.35em', color: '#1a1a1a', textTransform: 'uppercase', marginTop: '-3px', marginLeft: '8px' }}>KUTEER</span>
                                 </div>
                             </Link>
 
                             {/* Desktop Navigation */}
-                            <div className="flex space-x-7 items-center pt-1 ml-4">
-                                <Link to="/home" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[26px]">
+                            <div className="flex space-x-6 items-center pt-1">
+                                <Link to="/home" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[16px] whitespace-nowrap">
                                     Home
                                     <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-600 transition-all group-hover:w-full"></span>
                                 </Link>
-                                <Link to="/shop" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[262px]">
+                                <Link to="/shop" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[16px] whitespace-nowrap">
                                     Shop
                                     <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-600 transition-all group-hover:w-full"></span>
                                 </Link>
-                                <Link to="/collections" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[26px]">
+                                <Link to="/collections" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[16px] whitespace-nowrap">
                                     Collections
                                     <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-600 transition-all group-hover:w-full"></span>
                                 </Link>
-                                <Link to="/about" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[26px]">
+                                <Link to="/about" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[16px] whitespace-nowrap">
                                     About Us
                                     <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-600 transition-all group-hover:w-full"></span>
                                 </Link>
                                 {/* Admin Link Check */}
                                 {user && user.role === 'admin' && (
-                                    <Link to="/admin" className="text-red-600 font-bold hover:text-red-800 transition-colors text-[32px]">Admin Dashboard</Link>
+                                    <Link to="/admin" className="text-red-600 font-bold hover:text-red-800 transition-colors text-[16px] whitespace-nowrap">Admin Dashboard</Link>
                                 )}
                             </div>
                         </div>
