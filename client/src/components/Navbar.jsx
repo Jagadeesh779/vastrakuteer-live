@@ -66,11 +66,11 @@ const Navbar = () => {
                         {/* Left Group: Logo + Navigation */}
                         <div className="hidden md:flex items-center flex-1">
                             {/* Logo Section */}
-                            <Link to="/home" className="flex items-center h-full py-0" style={{ textDecoration: 'none' }}>
-                                <img src={logo} alt="Vastra Kuteer" style={{ height: '76px', width: 'auto', objectFit: 'contain', transform: 'scale(1.5)', transformOrigin: 'left center' }} />
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 0.9, marginLeft: '130px' }}>
-                                    <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '3.2rem', fontWeight: 500, color: '#1a5c3a', lineHeight: 0.9, marginRight: '12px' }}>Vastra</span>
-                                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '1.1rem', fontWeight: 700, letterSpacing: '0.36em', color: '#1a1a1a', textTransform: 'uppercase', marginTop: '-4px', marginRight: '8px' }}>KUTEER</span>
+                            <Link to="/home" className="flex items-center h-full py-0 gap-3" style={{ textDecoration: 'none' }}>
+                                <img src={logo} alt="Vastra Kuteer" style={{ height: '74px', width: 'auto', objectFit: 'contain' }} />
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 0.95 }}>
+                                    <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '2.8rem', fontWeight: 500, color: '#1a5c3a', lineHeight: 0.95 }}>Vastra</span>
+                                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.95rem', fontWeight: 700, letterSpacing: '0.35em', color: '#1a1a1a', textTransform: 'uppercase', marginTop: '-2px', marginLeft: '4px' }}>KUTEER</span>
                                 </div>
                             </Link>
 
@@ -239,11 +239,11 @@ const Navbar = () => {
 
                         {/* Mobile Logo Group */}
                         <div className="md:hidden flex items-center h-full py-1">
-                            <Link to="/home" className="flex items-center gap-1">
-                                <img src={logo} alt="Vastra Kuteer" style={{ height: '68px', width: 'auto', objectFit: 'contain', transform: 'scale(1.4)', transformOrigin: 'left center' }} />
-                                <div className="flex flex-col items-start leading-none ml-4">
-                                    <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '2.2rem' }} className="text-emerald-800">Vastra</span>
-                                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.8rem' }} className="font-bold tracking-[0.2em] text-gray-900 uppercase -mt-1 ml-3">KUTEER</span>
+                            <Link to="/home" className="flex items-center gap-2">
+                                <img src={logo} alt="Vastra Kuteer" style={{ height: '64px', width: 'auto', objectFit: 'contain' }} />
+                                <div className="flex flex-col items-start leading-none">
+                                    <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '2.4rem' }} className="text-emerald-800">Vastra</span>
+                                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.85rem' }} className="font-bold tracking-[0.2em] text-gray-900 uppercase -mt-1 ml-2">KUTEER</span>
                                 </div>
                             </Link>
                         </div>
@@ -296,8 +296,8 @@ const Navbar = () => {
                             {/* Panel Header */}
                             <div className="flex justify-between items-center p-5 border-b border-gray-100">
                                 <div className="flex items-center gap-2">
-                                    <img src={logo} alt="Logo" style={{ height: '52px', width: 'auto', objectFit: 'contain', transform: 'scale(1.3)', transformOrigin: 'left center' }} />
-                                    <div className="flex flex-col leading-none ml-2">
+                                    <img src={logo} alt="Logo" style={{ height: '52px', width: 'auto', objectFit: 'contain' }} />
+                                    <div className="flex flex-col leading-none">
                                         <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '1.8rem' }} className="text-emerald-800">Vastra</span>
                                         <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.65rem' }} className="font-bold tracking-[0.25em] text-gray-900 uppercase ml-2">KUTEER</span>
                                     </div>
