@@ -272,4 +272,74 @@ const buildReceiptEmail = (order, userName) => `
 </html>
 `;
 
-module.exports = { buildFlashEmail, buildWelcomeEmail, buildReceiptEmail };
+/**
+ * Generates a beautiful HTML OTP email for Registration / Login verification.
+ * @param {string} otp   - 6-digit OTP string
+ * @param {string} type  - 'register' or 'login'
+ * @param {string} name  - Recipient name or 'Valued Customer'
+ * @returns {string} HTML string
+ */
+const buildOtpEmail = (otp, type = 'register', name = 'Valued Customer') => {
+    const isRegister = type === 'register';
+    const title = isRegister ? 'Account Registration Verification' : 'Secure Account Login';
+    const subtitle = isRegister 
+        ? 'Thank you for choosing Vastra Kuteer. Use the One-Time Password (OTP) below to complete your account registration:'
+        : 'Use the One-Time Password (OTP) below to complete your secure login to Vastra Kuteer:';
+    const expireTime = isRegister ? '10 minutes' : '5 minutes';
+    const primaryColor = isRegister ? '#065f46' : '#be185d';
+    const lightBg = isRegister ? '#ecfdf5' : '#fdf2f8';
+    const borderColor = isRegister ? '#10b981' : '#f472b6';
+
+    return `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#F5F3FF;font-family:Georgia,serif;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center" style="padding:30px 15px;">
+      <table width="550" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg, ${primaryColor} 0%, ${isRegister ? '#047857' : '#9d174d'} 100%);padding:36px;text-align:center;">
+            <h1 style="color:#ffffff;font-size:26px;margin:0 0 4px;letter-spacing:2px;">VASTRA KUTEER</h1>
+            <p style="color:rgba(255,255,255,0.85);font-size:12px;margin:0;letter-spacing:3px;text-transform:uppercase;">Ethnic Wear | Handcrafted with Love</p>
+          </td>
+        </tr>
+
+        <!-- OTP Content -->
+        <tr>
+          <td style="padding:36px 30px;text-align:center;">
+            <div style="font-size:48px;margin-bottom:12px;">🔑</div>
+            <h2 style="color:#1f2937;font-size:22px;margin:0 0 12px;">${title}</h2>
+            <p style="color:#4b5563;font-size:15px;line-height:1.6;margin:0 0 24px;">
+              Hello <strong>${name}</strong>,<br><br>${subtitle}
+            </p>
+
+            <!-- OTP Code Display Box -->
+            <div style="background:${lightBg};border:2px dashed ${borderColor};border-radius:12px;padding:22px;margin:0 0 24px;display:inline-block;width:100%;box-sizing:border-box;">
+              <p style="color:${primaryColor};font-size:12px;font-weight:700;margin:0 0 8px;letter-spacing:2px;text-transform:uppercase;">Your One-Time Password (OTP)</p>
+              <div style="background:#ffffff;border:1px solid ${borderColor};border-radius:8px;padding:14px;margin:0 0 8px;">
+                <span style="font-size:36px;font-weight:900;color:${primaryColor};letter-spacing:10px;font-family:Consolas, Monaco, monospace;">${otp}</span>
+              </div>
+              <p style="color:#6b7280;font-size:13px;margin:0;">⏱️ Valid for <strong>${expireTime}</strong>. Do not share this code with anyone.</p>
+            </div>
+
+            <p style="color:#9ca3af;font-size:13px;margin:0;">If you did not request this verification code, please ignore this email.</p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#F8F8FF;padding:20px;text-align:center;border-top:1px solid #e5e7eb;">
+            <p style="color:#9ca3af;font-size:12px;margin:0;">© 2026 Vastra Kuteer | <a href="https://vastrakuteer.in" style="color:${primaryColor};text-decoration:none;">vastrakuteer.in</a></p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>  
+</body>
+</html>`;
+};
+
+module.exports = { buildFlashEmail, buildWelcomeEmail, buildReceiptEmail, buildOtpEmail };

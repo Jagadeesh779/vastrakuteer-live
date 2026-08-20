@@ -7,7 +7,7 @@ const { auth, admin } = require('../middleware/auth');
 const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
-const { buildWelcomeEmail } = require('../utils/emailTemplates');
+const { buildWelcomeEmail, buildOtpEmail } = require('../utils/emailTemplates');
 const { getActiveEvent } = require('../utils/eventCalendar');
 
 // Global OTP Cache & Persistent File Backup
@@ -216,14 +216,7 @@ router.post('/send-register-otp', async (req, res) => {
             from: `"Vastra Kuteer" <${DEFAULT_EMAIL_USER}>`,
             to: cleanEmail,
             subject: `Your Vastra Kuteer Registration OTP: ${otp}`,
-            html: `<div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 25px; border: 1px solid #e5e7eb; border-radius: 12px; background: #ffffff;">
-                    <h2 style="color: #065f46; text-align: center; margin-top: 0;">Welcome to Vastra Kuteer</h2>
-                    <p style="font-size: 15px; color: #374151; text-align: center;">Use the code below to complete your account registration:</p>
-                    <div style="background: #ecfdf5; padding: 18px; text-align: center; font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #047857; border-radius: 8px; margin: 20px 0; border: 1px dashed #10b981;">
-                        ${otp}
-                    </div>
-                    <p style="color: #6b7280; font-size: 13px; text-align: center;">This code will expire in 10 minutes.</p>
-                   </div>`
+            html: buildOtpEmail(otp, 'register', 'Valued Customer')
         };
 
         // Send HTTP response immediately so UI transitions instantly
@@ -402,15 +395,7 @@ router.post('/send-login-otp', async (req, res) => {
             from: `"Vastra Kuteer" <${DEFAULT_EMAIL_USER}>`,
             to: cleanEmail,
             subject: `Your Vastra Kuteer Login OTP: ${otp}`,
-            html: `<div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 25px; border: 1px solid #e5e7eb; border-radius: 12px; background: #ffffff;">
-                    <h2 style="color: #be185d; text-align: center; margin-top: 0;">Secure Login</h2>
-                    <p style="font-size: 15px; color: #374151; text-align: center;">Hello ${user.fullName || 'Valued Customer'},</p>
-                    <p style="font-size: 14px; color: #4b5563; text-align: center;">Your One-Time Password (OTP) for logging into Vastra Kuteer is:</p>
-                    <div style="background: #fdf2f8; padding: 18px; text-align: center; font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #be185d; border-radius: 8px; margin: 20px 0; border: 1px dashed #f472b6;">
-                        ${otp}
-                    </div>
-                    <p style="color: #6b7280; font-size: 13px; text-align: center;">This code will expire in 5 minutes.</p>
-                   </div>`
+            html: buildOtpEmail(otp, 'login', user.fullName || 'Valued Customer')
         };
 
         // Respond immediately to UI
