@@ -71,7 +71,7 @@ const Navbar = () => {
                                 {/* Brand Name Container */}
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 0.95 }}>
                                     <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '2.7rem', fontWeight: 500, color: '#1a5c3a', lineHeight: 0.95, marginLeft: '0px' }}>Vastra</span>
-                                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.35em', color: '#1a1a1a', textTransform: 'uppercase', marginTop: '1px', marginLeft: '0px' }}>KUTEER</span>
+                                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.46em', color: '#1a1a1a', textTransform: 'uppercase', marginTop: '1px', marginLeft: '14px' }}>KUTEER</span>
                                 </div>
                             </Link>
 
