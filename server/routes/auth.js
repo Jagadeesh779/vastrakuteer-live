@@ -108,18 +108,25 @@ const sendTokenResponse = (user, statusCode, res, msg, isNewUser = false) => {
 // @route   POST /api/auth/check-email
 // @desc    Check if email exists for live validation
 // @access  Public
+// @route   POST /api/auth/check-email
+// @desc    Check if email exists for live validation
+// @access  Public
 router.post('/check-email', async (req, res) => {
     try {
         const { email } = req.body;
         if (!email) return res.status(400).json({ message: 'Email required' });
 
-        if (mongoose.connection.readyState !== 1) {
-            let user = findUserByEmail(email);
-            return res.json({ exists: !!user });
-        } else {
-            let user = await User.findOne({ email });
-            return res.json({ exists: !!user });
+        const cleanEmail = email.trim().toLowerCase();
+        let user = null;
+        if (mongoose.connection.readyState === 1) {
+            try {
+                user = await User.findOne({ email: new RegExp(`^${cleanEmail}$`, 'i') });
+            } catch (e) {}
         }
+        if (!user) {
+            user = findUserByEmail(cleanEmail);
+        }
+        return res.json({ exists: !!user });
     } catch (err) {
         res.status(500).json({ message: 'Server Error' });
     }
@@ -133,15 +140,20 @@ router.post('/send-register-otp', async (req, res) => {
         const { email } = req.body;
         if (!email) return res.status(400).json({ message: 'Email is required' });
 
-        // Check if user already exists
-        let userExists = false;
-        if (mongoose.connection.readyState !== 1) {
-            userExists = !!findUserByEmail(email);
-        } else {
-            userExists = !!(await User.findOne({ email }));
+        const cleanEmail = email.trim().toLowerCase();
+
+        // Check if user already exists in Mongo or JSON DB
+        let user = null;
+        if (mongoose.connection.readyState === 1) {
+            try {
+                user = await User.findOne({ email: new RegExp(`^${cleanEmail}$`, 'i') });
+            } catch (e) {}
+        }
+        if (!user) {
+            user = findUserByEmail(cleanEmail);
         }
 
-        if (userExists) {
+        if (user) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
@@ -149,24 +161,30 @@ router.post('/send-register-otp', async (req, res) => {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
         // Cache it for 10 minutes
-        global.registerOTPs.set(email, { otp, expires: Date.now() + 10 * 60 * 1000 });
+        global.registerOTPs.set(cleanEmail, { otp, expires: Date.now() + 10 * 60 * 1000 });
 
         // Setup Nodemailer
         const transporter = getTransporter();
 
         const mailOptions = {
             from: `"Vastra Kuteer" <${DEFAULT_EMAIL_USER}>`,
-            to: email,
+            to: cleanEmail,
             subject: 'Vastra Kuteer Registration OTP',
             html: `<h2>Welcome to Vastra Kuteer!</h2>
                    <p>Your OTP for account registration is <strong>${otp}</strong>.</p>
                    <p>This code will expire in 10 minutes.</p>`
         };
 
-        await transporter.sendMail(mailOptions);
-        logDebug(`[OTP SENT] ${email} - OTP: ${otp}`);
-
+        // Send HTTP response immediately so UI transitions instantly
         res.json({ message: 'OTP sent to your email' });
+
+        // Send email in background
+        transporter.sendMail(mailOptions).then(() => {
+            logDebug(`[REGISTER OTP SENT] ${cleanEmail} - OTP: ${otp}`);
+        }).catch(err => {
+            console.error(`[REGISTER OTP ERROR] ${cleanEmail}:`, err.message);
+        });
+
     } catch (err) {
         logDebug(`[OTP ERROR] ${err.message}`);
         res.status(500).json({ message: 'Failed to send OTP' });
@@ -182,27 +200,29 @@ router.post('/register', async (req, res) => {
     try {
         if (!otp) return res.status(400).json({ message: 'OTP is required' });
 
-        const cached = global.registerOTPs.get(email);
+        const cleanEmail = (email || '').trim().toLowerCase();
+
+        const cached = global.registerOTPs.get(cleanEmail);
         if (!cached || cached.expires < Date.now()) {
             return res.status(400).json({ message: 'OTP has expired or is invalid' });
         }
-        if (cached.otp !== otp) {
+        if (cached.otp !== otp.trim()) {
             return res.status(400).json({ message: 'Incorrect OTP' });
         }
 
         // Clear OTP after successful use
-        global.registerOTPs.delete(email);
+        global.registerOTPs.delete(cleanEmail);
 
         const newReferralCode = 'VK' + Math.random().toString(36).substring(2, 6).toUpperCase();
 
         // Fallback to JSON DB if Mongo is offline
         if (mongoose.connection.readyState !== 1) {
-            logDebug(`[REGISTER] Using JSON DB. Email: ${email}`);
-            let user = findUserByEmail(email);
+            logDebug(`[REGISTER] Using JSON DB. Email: ${cleanEmail}`);
+            let user = findUserByEmail(cleanEmail);
             if (user) {
                 return res.status(400).json({ message: 'User already exists' });
             }
-            user = { fullName, email, password, role: 'user', referralCode: newReferralCode, referredBy, earnedCoupons: [] };
+            user = { fullName, email: cleanEmail, password, role: 'user', referralCode: newReferralCode, referredBy, earnedCoupons: [] };
 
             if (referredBy) {
                 const users = getAllUsers();
@@ -216,21 +236,21 @@ router.post('/register', async (req, res) => {
 
             const savedUser = saveUser(user);
             // Send welcome email asynchronously without blocking registration response
-            sendWelcomeEmail(fullName, email).catch(err => console.error('Welcome email error:', err));
+            sendWelcomeEmail(fullName, cleanEmail).catch(err => console.error('Welcome email error:', err));
             sendTokenResponse(savedUser, 201, res, 'User registered successfully (Local Mode)', true);
             return;
         }
 
         // MongoDB Logic
-        let user = await User.findOne({ email });
+        let user = await User.findOne({ email: new RegExp(`^${cleanEmail}$`, 'i') });
         if (!user) {
-            user = findUserByEmail(email);
+            user = findUserByEmail(cleanEmail);
         }
         if (user) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        user = new User({ fullName, email, password, referralCode: newReferralCode, referredBy, earnedCoupons: [] });
+        user = new User({ fullName, email: cleanEmail, password, referralCode: newReferralCode, referredBy, earnedCoupons: [] });
         await user.save();
 
         if (referredBy) {
@@ -242,7 +262,7 @@ router.post('/register', async (req, res) => {
         }
 
         // Send welcome email asynchronously without blocking registration response
-        sendWelcomeEmail(fullName, email).catch(err => console.error('Welcome email error:', err));
+        sendWelcomeEmail(fullName, cleanEmail).catch(err => console.error('Welcome email error:', err));
         sendTokenResponse(user, 201, res, 'User registered successfully', true);
 
     } catch (err) {
@@ -261,20 +281,24 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ message: 'Please enter both email and password' });
         }
 
+        const cleanEmail = email.trim().toLowerCase();
+
         // Special static admin login
-        if (email === 'admin@vastrakuteer.com' && password === 'admin123') {
-            const adminUser = { _id: 'mock-admin-id', fullName: 'Vastra Admin', email, role: 'admin' };
+        if (cleanEmail === 'admin@vastrakuteer.com' && password === 'admin123') {
+            const adminUser = { _id: 'mock-admin-id', fullName: 'Vastra Admin', email: cleanEmail, role: 'admin' };
             return sendTokenResponse(adminUser, 200, res, 'Admin Login successful');
         }
 
         let user = null;
 
         if (mongoose.connection.readyState === 1) {
-            user = await User.findOne({ email });
+            try {
+                user = await User.findOne({ email: new RegExp(`^${cleanEmail}$`, 'i') });
+            } catch (e) {}
         }
 
         if (!user) {
-            user = findUserByEmail(email);
+            user = findUserByEmail(cleanEmail);
         }
 
         if (!user || user.password !== password) {
@@ -297,12 +321,17 @@ router.post('/send-login-otp', async (req, res) => {
         const { email } = req.body;
         if (!email) return res.status(400).json({ message: 'Email is required' });
 
-        // Check if user exists (vital for login)
-        let user;
-        if (mongoose.connection.readyState !== 1) {
-            user = findUserByEmail(email);
-        } else {
-            user = await User.findOne({ email });
+        const cleanEmail = email.trim().toLowerCase();
+
+        // Check if user exists in Mongo or JSON DB
+        let user = null;
+        if (mongoose.connection.readyState === 1) {
+            try {
+                user = await User.findOne({ email: new RegExp(`^${cleanEmail}$`, 'i') });
+            } catch (e) {}
+        }
+        if (!user) {
+            user = findUserByEmail(cleanEmail);
         }
 
         if (!user) {
@@ -312,19 +341,19 @@ router.post('/send-login-otp', async (req, res) => {
         // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Cache it for 5 minutes (shorter for login)
-        global.loginOTPs.set(email, { otp, expires: Date.now() + 5 * 60 * 1000 });
+        // Cache it for 5 minutes
+        global.loginOTPs.set(cleanEmail, { otp, expires: Date.now() + 5 * 60 * 1000 });
 
         // Setup Nodemailer
         const transporter = getTransporter();
 
         const mailOptions = {
             from: `"Vastra Kuteer" <${DEFAULT_EMAIL_USER}>`,
-            to: email,
+            to: cleanEmail,
             subject: 'Vastra Kuteer Login OTP',
             html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
                     <h2 style="color: #be185d; text-align: center;">Secure Login</h2>
-                    <p>Hello ${user.fullName},</p>
+                    <p>Hello ${user.fullName || 'Valued Customer'},</p>
                     <p>Your One-Time Password (OTP) for logging into Vastra Kuteer is:</p>
                     <div style="background: #fdf2f8; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #be185d; border-radius: 5px; margin: 20px 0;">
                         ${otp}
@@ -335,10 +364,16 @@ router.post('/send-login-otp', async (req, res) => {
                    </div>`
         };
 
-        await transporter.sendMail(mailOptions);
-        logDebug(`[LOGIN OTP SENT] ${email} - OTP: ${otp}`);
-
+        // Respond immediately to UI
         res.json({ message: 'OTP sent to your email' });
+
+        // Send email in background
+        transporter.sendMail(mailOptions).then(() => {
+            logDebug(`[LOGIN OTP SENT] ${cleanEmail} - OTP: ${otp}`);
+        }).catch(err => {
+            console.error(`[LOGIN OTP ERROR] ${cleanEmail}:`, err.message);
+        });
+
     } catch (err) {
         logDebug(`[LOGIN OTP ERROR] ${err.message}`);
         res.status(500).json({ message: 'Failed to send login OTP' });
@@ -353,26 +388,31 @@ router.post('/login-otp', async (req, res) => {
         const { email, otp } = req.body;
         if (!email || !otp) return res.status(400).json({ message: 'Email and OTP are required' });
 
-        const cached = global.loginOTPs.get(email);
+        const cleanEmail = email.trim().toLowerCase();
+
+        const cached = global.loginOTPs.get(cleanEmail);
         if (!cached) return res.status(400).json({ message: 'OTP expired or not requested' });
 
         if (Date.now() > cached.expires) {
-            global.loginOTPs.delete(email);
+            global.loginOTPs.delete(cleanEmail);
             return res.status(400).json({ message: 'OTP expired' });
         }
 
-        if (cached.otp !== otp) {
+        if (cached.otp !== otp.trim()) {
             return res.status(400).json({ message: 'Invalid OTP' });
         }
 
         // OTP Valid - Proceed to Login
-        global.loginOTPs.delete(email);
+        global.loginOTPs.delete(cleanEmail);
 
-        let user;
-        if (mongoose.connection.readyState !== 1) {
-            user = findUserByEmail(email);
-        } else {
-            user = await User.findOne({ email });
+        let user = null;
+        if (mongoose.connection.readyState === 1) {
+            try {
+                user = await User.findOne({ email: new RegExp(`^${cleanEmail}$`, 'i') });
+            } catch (e) {}
+        }
+        if (!user) {
+            user = findUserByEmail(cleanEmail);
         }
 
         if (!user) return res.status(404).json({ message: 'User not found' });
@@ -395,68 +435,47 @@ router.post('/forgot-password', async (req, res) => {
             return res.status(400).json({ message: 'Email is required' });
         }
 
-        // 1. Generate secure random token
+        const cleanEmail = email.trim().toLowerCase();
         const resetToken = crypto.randomBytes(32).toString('hex');
-
-        // 2. Hash token for saving in database (security best practice)
         const resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-        const resetPasswordExpires = Date.now() + 3600000; // 1 hr from now
+        const resetPasswordExpires = Date.now() + 3600000;
 
-        let user;
-        if (mongoose.connection.readyState !== 1) {
-            // JSON DB Mode (Basic mock implementation)
-            user = findUserByEmail(email);
-            if (!user) return res.status(404).json({ message: 'User not found' });
+        let user = null;
+        if (mongoose.connection.readyState === 1) {
+            try {
+                user = await User.findOne({ email: new RegExp(`^${cleanEmail}$`, 'i') });
+            } catch (e) {}
+        }
+        if (!user) {
+            user = findUserByEmail(cleanEmail);
+        }
 
-            // In a real JSON db flow, we'd update jsonDb to store it, but for mock, just log it
-            logDebug(`[FORGOT PW] JSON Mode reset token for ${email}: ${resetToken}`);
-        } else {
-            // MongoDB Mode
-            user = await User.findOne({ email });
-            if (!user) return res.status(404).json({ message: 'User not found' });
+        if (!user) return res.status(404).json({ message: 'User not found' });
 
+        if (mongoose.connection.readyState === 1 && user.save) {
             user.resetPasswordToken = resetPasswordToken;
             user.resetPasswordExpires = resetPasswordExpires;
             await user.save();
         }
 
-        // 3. Create the Reset URL
         const clientUrl = req.headers.origin || 'https://vastrakuteer.in';
         const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
 
-        try {
-            const sendEmail = require('../utils/sendEmail');
-            const message = `You requested a password reset for Vastra Kuteer.\n\nPlease click this link to set a new password:\n\n${resetUrl}\n\nIf you did not request this, please ignore this email.`;
+        // Respond immediately to UI
+        res.status(200).json({ message: 'Password reset link sent! Please check your email.' });
 
-            const previewUrl = await sendEmail({
-                email: user.email,
-                subject: 'Vastra Kuteer - Password Reset',
-                message
-            });
+        const sendEmail = require('../utils/sendEmail');
+        const message = `You requested a password reset for Vastra Kuteer.\n\nPlease click this link to set a new password:\n\n${resetUrl}\n\nIf you did not request this, please ignore this email.`;
 
-            // Log so we can view the email in terminal
-            logDebug(`\n==========================================`);
-            logDebug(`TEST EMAIL SENT! VIEW IT HERE:`);
-            logDebug(`${previewUrl}`);
-            logDebug(`==========================================\n`);
+        sendEmail({
+            email: user.email,
+            subject: 'Vastra Kuteer - Password Reset',
+            message
+        }).catch(err => console.error('Forgot password email error:', err.message));
 
-            res.status(200).json({ message: 'Password reset link sent! Check terminal for the fast Email Preview link.' });
-
-        } catch (error) {
-            console.error('Email send error:', error);
-            logDebug(`[FORGOT PW] Email send failed: ${error.message} - ${error.stack}`);
-            // Revert changes if email fails
-            if (mongoose.connection.readyState === 1 && user) {
-                user.resetPasswordToken = undefined;
-                user.resetPasswordExpires = undefined;
-                await user.save();
-            }
-            res.status(500).json({ message: 'Error sending reset email. Please try again later.' });
-        }
-
-    } catch (err) {
-        console.error('Forgot Password Error:', err);
-        res.status(500).json({ message: 'Server error processing request' });
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ message: 'Server Error' });
     }
 });
 
