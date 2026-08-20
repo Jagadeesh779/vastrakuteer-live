@@ -94,56 +94,56 @@ const sendEmailWithFallback = async (mailOptions) => {
         from: `"Vastra Kuteer" <${user}>`
     };
 
-    // Attempt 1: Service Gmail SSL Port 465
-    try {
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: { user, pass },
-            connectionTimeout: 5000,
-            greetingTimeout: 5000,
-            socketTimeout: 5000,
-            tls: { rejectUnauthorized: false }
-        });
-        const info = await transporter.sendMail(sanitizedMailOptions);
-        console.log(`[SMTP DELIVERED via Gmail Service] To: ${sanitizedMailOptions.to} | MsgId: ${info.messageId}`);
-        return info;
-    } catch (err1) {
-        console.warn(`[SMTP Attempt 1 Failed] ${err1.message}. Trying Port 587 STARTTLS...`);
-    }
-
-    // Attempt 2: Explicit Host smtp.gmail.com Port 587 (STARTTLS)
-    try {
-        const transporter587 = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 587,
-            secure: false,
-            auth: { user, pass },
-            connectionTimeout: 5000,
-            greetingTimeout: 5000,
-            socketTimeout: 5000,
-            tls: { rejectUnauthorized: false }
-        });
-        const info = await transporter587.sendMail(sanitizedMailOptions);
-        console.log(`[SMTP DELIVERED via Port 587] To: ${sanitizedMailOptions.to} | MsgId: ${info.messageId}`);
-        return info;
-    } catch (err2) {
-        console.warn(`[SMTP Attempt 2 Failed] ${err2.message}. Trying Port 465 Direct SSL...`);
-    }
-
-    // Attempt 3: Explicit Host smtp.gmail.com Port 465 (Direct SSL)
+    // Attempt 1: Explicit Host smtp.gmail.com Port 465 (Direct SSL)
     try {
         const transporter465 = nodemailer.createTransport({
             host: 'smtp.gmail.com',
             port: 465,
             secure: true,
             auth: { user, pass },
-            connectionTimeout: 5000,
-            greetingTimeout: 5000,
-            socketTimeout: 5000,
+            connectionTimeout: 4000,
+            greetingTimeout: 4000,
+            socketTimeout: 4000,
             tls: { rejectUnauthorized: false }
         });
         const info = await transporter465.sendMail(sanitizedMailOptions);
         console.log(`[SMTP DELIVERED via Port 465] To: ${sanitizedMailOptions.to} | MsgId: ${info.messageId}`);
+        return info;
+    } catch (err1) {
+        console.warn(`[SMTP Attempt 1 Failed] ${err1.message}. Trying Gmail Service...`);
+    }
+
+    // Attempt 2: Service Gmail SSL
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: { user, pass },
+            connectionTimeout: 4000,
+            greetingTimeout: 4000,
+            socketTimeout: 4000,
+            tls: { rejectUnauthorized: false }
+        });
+        const info = await transporter.sendMail(sanitizedMailOptions);
+        console.log(`[SMTP DELIVERED via Gmail Service] To: ${sanitizedMailOptions.to} | MsgId: ${info.messageId}`);
+        return info;
+    } catch (err2) {
+        console.warn(`[SMTP Attempt 2 Failed] ${err2.message}. Trying Port 587 STARTTLS...`);
+    }
+
+    // Attempt 3: Explicit Host smtp.gmail.com Port 587 (STARTTLS)
+    try {
+        const transporter587 = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 587,
+            secure: false,
+            auth: { user, pass },
+            connectionTimeout: 4000,
+            greetingTimeout: 4000,
+            socketTimeout: 4000,
+            tls: { rejectUnauthorized: false }
+        });
+        const info = await transporter587.sendMail(sanitizedMailOptions);
+        console.log(`[SMTP DELIVERED via Port 587] To: ${sanitizedMailOptions.to} | MsgId: ${info.messageId}`);
         return info;
     } catch (err3) {
         console.error(`[ALL SMTP ATTEMPTS FAILED] To: ${sanitizedMailOptions.to} - Error: ${err3.message}`);
