@@ -219,15 +219,16 @@ router.post('/send-register-otp', async (req, res) => {
             html: buildOtpEmail(otp, 'register', 'Valued Customer')
         };
 
-        // Send HTTP response immediately so UI transitions instantly
-        res.json({ message: 'OTP sent to your email' });
+        // Send email synchronously to ensure delivery before completing request
+        try {
+            const info = await transporter.sendMail(mailOptions);
+            console.log(`[REGISTER OTP SENT] ${cleanEmail} -> ${otp} | MsgId: ${info.messageId}`);
+        } catch (mailErr) {
+            console.error(`[REGISTER OTP ERROR] ${cleanEmail}:`, mailErr.message);
+            return res.status(500).json({ message: `Failed to send OTP email: ${mailErr.message}` });
+        }
 
-        // Send email in background
-        transporter.sendMail(mailOptions).then(() => {
-            logDebug(`[REGISTER OTP SENT] ${cleanEmail} - Code: ${otp}`);
-        }).catch(err => {
-            console.error(`[REGISTER OTP ERROR] ${cleanEmail}:`, err.message);
-        });
+        return res.json({ message: 'OTP sent to your email' });
 
     } catch (err) {
         logDebug(`[OTP ERROR] ${err.message}`);
@@ -398,15 +399,16 @@ router.post('/send-login-otp', async (req, res) => {
             html: buildOtpEmail(otp, 'login', user.fullName || 'Valued Customer')
         };
 
-        // Respond immediately to UI
-        res.json({ message: 'OTP sent to your email' });
+        // Send email synchronously to ensure delivery before completing request
+        try {
+            const info = await transporter.sendMail(mailOptions);
+            console.log(`[LOGIN OTP SENT] ${cleanEmail} -> ${otp} | MsgId: ${info.messageId}`);
+        } catch (mailErr) {
+            console.error(`[LOGIN OTP ERROR] ${cleanEmail}:`, mailErr.message);
+            return res.status(500).json({ message: `Failed to send OTP email: ${mailErr.message}` });
+        }
 
-        // Send email in background
-        transporter.sendMail(mailOptions).then(() => {
-            logDebug(`[LOGIN OTP SENT] ${cleanEmail} - Code: ${otp}`);
-        }).catch(err => {
-            console.error(`[LOGIN OTP ERROR] ${cleanEmail}:`, err.message);
-        });
+        return res.json({ message: 'OTP sent to your email' });
 
     } catch (err) {
         logDebug(`[LOGIN OTP ERROR] ${err.message}`);
