@@ -82,6 +82,32 @@ const removeOtp = (type, email) => {
 const DEFAULT_EMAIL_USER = process.env.EMAIL_USER || 'vastrakuteer9@gmail.com';
 const DEFAULT_EMAIL_PASS = process.env.EMAIL_PASS || 'lisxqpgpcqjuqkpp';
 
+const sendEmailWithFallback = async (mailOptions) => {
+    const primaryTransporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user: DEFAULT_EMAIL_USER, pass: DEFAULT_EMAIL_PASS },
+        tls: { rejectUnauthorized: false }
+    });
+
+    try {
+        const info = await primaryTransporter.sendMail(mailOptions);
+        console.log(`[SMTP PRIMARY DELIVERED] To: ${mailOptions.to} | MsgId: ${info.messageId}`);
+        return info;
+    } catch (primaryErr) {
+        console.warn(`[SMTP PRIMARY FAILED] ${primaryErr.message}. Trying Port 587 TLS fallback...`);
+        const fallbackTransporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 587,
+            secure: false,
+            auth: { user: DEFAULT_EMAIL_USER, pass: DEFAULT_EMAIL_PASS },
+            tls: { rejectUnauthorized: false }
+        });
+        const info = await fallbackTransporter.sendMail(mailOptions);
+        console.log(`[SMTP FALLBACK DELIVERED] To: ${mailOptions.to} | MsgId: ${info.messageId}`);
+        return info;
+    }
+};
+
 const getTransporter = () => {
     return nodemailer.createTransport({
         service: 'gmail',
@@ -105,9 +131,7 @@ const sendWelcomeEmail = async (name, email) => {
             subject: `Welcome to Vastra Kuteer, ${name}! 🎉`,
             html: buildWelcomeEmail(name, activeEvent)
         };
-        const transporter = getTransporter();
-        await transporter.sendMail(mailOptions);
-        console.log(`[WELCOME EMAIL] Sent successfully to ${email}`);
+        await sendEmailWithFallback(mailOptions);
     } catch (err) {
         console.error('Welcome email error:', err.message);
     }
@@ -211,16 +235,13 @@ router.post('/send-register-otp', async (req, res) => {
             html: buildOtpEmail(otp, 'register', 'Valued Customer')
         };
 
-        // Send HTTP response immediately so UI transitions instantly
-        res.json({ message: 'OTP sent to your email' });
-
-        // Dispatch email via fresh transport
-        const transporter = getTransporter();
-        transporter.sendMail(mailOptions).then(info => {
-            console.log(`[REGISTER OTP SENT] ${cleanEmail} -> ${otp} | MsgId: ${info.messageId}`);
-        }).catch(err => {
-            console.error(`[REGISTER OTP ERROR] ${cleanEmail}:`, err.message);
-        });
+        try {
+            await sendEmailWithFallback(mailOptions);
+            return res.json({ message: 'OTP sent to your email' });
+        } catch (emailErr) {
+            console.error(`[REGISTER OTP ERROR] ${cleanEmail}:`, emailErr.message);
+            return res.status(500).json({ message: `Failed to deliver email: ${emailErr.message}` });
+        }
 
     } catch (err) {
         logDebug(`[OTP ERROR] ${err.message}`);
@@ -392,16 +413,13 @@ router.post('/send-login-otp', async (req, res) => {
             html: buildOtpEmail(otp, 'login', user ? (user.fullName || 'Valued Customer') : 'Valued Customer')
         };
 
-        // Send HTTP response immediately so UI transitions instantly
-        res.json({ message: 'OTP sent to your email' });
-
-        // Dispatch email via fresh transport
-        const transporter = getTransporter();
-        transporter.sendMail(mailOptions).then(info => {
-            console.log(`[LOGIN OTP SENT] ${cleanEmail} -> ${otp} | MsgId: ${info.messageId}`);
-        }).catch(err => {
-            console.error(`[LOGIN OTP ERROR] ${cleanEmail}:`, err.message);
-        });
+        try {
+            await sendEmailWithFallback(mailOptions);
+            return res.json({ message: 'OTP sent to your email' });
+        } catch (emailErr) {
+            console.error(`[LOGIN OTP ERROR] ${cleanEmail}:`, emailErr.message);
+            return res.status(500).json({ message: `Failed to deliver email: ${emailErr.message}` });
+        }
 
     } catch (err) {
         logDebug(`[LOGIN OTP ERROR] ${err.message}`);
