@@ -66,17 +66,17 @@ const Navbar = () => {
                         {/* Left Group: Logo + Navigation */}
                         <div className="hidden md:flex items-center flex-1">
                             {/* Logo Section */}
-                            <Link to="/home" className="flex items-center h-full py-0 gap-1" style={{ textDecoration: 'none' }}>
-                                <img src={logo} alt="Vastra Kuteer" style={{ height: '74px', width: 'auto', objectFit: 'contain', marginLeft: '20px' }} />
-                                {/* Brand Name Container (Move ONLY the name using marginLeft or transform) */}
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 0.95, marginLeft: '10px', transform: 'translateX(0px)' }}>
-                                    <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '2.6rem', fontWeight: 500, color: '#1a5c3a', lineHeight: 0.95, marginLeft: '0px' }}>Vastra</span>
-                                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.38em', color: '#1a1a1a', textTransform: 'uppercase', marginTop: '0px', marginLeft: '16px' }}>KUTEER</span>
+                            <Link to="/home" className="flex items-center h-full py-0 gap-3" style={{ textDecoration: 'none' }}>
+                                <img src={logo} alt="Vastra Kuteer" style={{ height: '68px', width: 'auto', objectFit: 'contain' }} />
+                                {/* Brand Name Container */}
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 0.9, justifyContent: 'center' }}>
+                                    <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '2.5rem', fontWeight: 500, color: '#1a5c3a', lineHeight: 0.95 }}>Vastra</span>
+                                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.82rem', fontWeight: 700, letterSpacing: '0.42em', color: '#1a1a1a', textTransform: 'uppercase', marginTop: '2px', marginLeft: '6px' }}>KUTEER</span>
                                 </div>
                             </Link>
 
                             {/* Desktop Navigation */}
-                            <div className="flex space-x-6 lg:space-x-8 items-center pt-1 ml-auto mr-32">
+                            <div className="flex space-x-6 lg:space-x-8 items-center pt-1 ml-10">
                                 <Link to="/home" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[16px] whitespace-nowrap">
                                     Home
                                     <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-600 transition-all group-hover:w-full"></span>
