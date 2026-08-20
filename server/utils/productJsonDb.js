@@ -69,7 +69,11 @@ const updateProduct = (id, updates) => {
 const deleteProduct = (id) => {
     let products = getProducts();
     const initialLength = products.length;
-    products = products.filter(p => p._id !== id);
+    const cleanId = String(id || '').trim();
+    products = products.filter(p => {
+        const pId = String(p._id !== undefined ? p._id : (p.id || '')).trim();
+        return pId !== cleanId;
+    });
     if (products.length !== initialLength) {
         fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2));
         return true;

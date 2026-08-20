@@ -538,6 +538,7 @@ const AdminDashboard = () => {
                 }
                 await axios.delete(`${API_URL}/api/products/${id}`);
                 addNotif('✅ Product deleted successfully!', 'success');
+                setProducts(prev => prev.filter(p => String(p._id || p.id || '').trim() !== String(id || '').trim()));
                 fetchData();
             } catch (err) {
                 console.error('Error deleting product:', err);

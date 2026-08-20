@@ -116,13 +116,22 @@ router.put('/:id', admin, async (req, res) => {
 router.delete('/:id', admin, async (req, res) => {
     try {
         let deleted = false;
+        const targetId = String(req.params.id || '').trim();
 
-        if (isConnected() && mongoose.Types.ObjectId.isValid(req.params.id)) {
-            const product = await Product.findByIdAndDelete(req.params.id);
-            if (product) deleted = true;
+        if (isConnected()) {
+            try {
+                if (mongoose.Types.ObjectId.isValid(targetId)) {
+                    const product = await Product.findByIdAndDelete(targetId);
+                    if (product) deleted = true;
+                }
+                const mongoResult = await Product.deleteOne({ $or: [{ _id: targetId }, { id: targetId }] });
+                if (mongoResult.deletedCount > 0) deleted = true;
+            } catch (e) {
+                console.error('Mongo product delete error:', e.message);
+            }
         }
 
-        const jsonDeleted = deleteProduct(req.params.id);
+        const jsonDeleted = deleteProduct(targetId);
         if (jsonDeleted) deleted = true;
 
         if (deleted) {
