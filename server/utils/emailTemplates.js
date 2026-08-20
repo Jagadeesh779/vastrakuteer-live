@@ -300,9 +300,12 @@ const buildOtpEmail = (otp, type = 'register', name = 'Valued Customer') => {
         
         <!-- Header -->
         <tr>
-          <td style="background:linear-gradient(135deg, ${primaryColor} 0%, ${isRegister ? '#047857' : '#9d174d'} 100%);padding:36px;text-align:center;">
-            <h1 style="color:#ffffff;font-size:26px;margin:0 0 4px;letter-spacing:2px;">VASTRA KUTEER</h1>
-            <p style="color:rgba(255,255,255,0.85);font-size:12px;margin:0;letter-spacing:3px;text-transform:uppercase;">Ethnic Wear | Handcrafted with Love</p>
+          <td style="background:linear-gradient(135deg, ${primaryColor} 0%, ${isRegister ? '#047857' : '#9d174d'} 100%);padding:30px 20px;text-align:center;">
+            <div style="background:#ffffff;display:inline-block;padding:8px 16px;border-radius:12px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,0.15);">
+              <img src="https://raw.githubusercontent.com/Jagadeesh779/vastrakuteer-live/main/client/src/assets/logo.png" alt="Vastra Kuteer Logo" style="height:65px;width:auto;display:block;" />
+            </div>
+            <h1 style="color:#ffffff;font-size:24px;margin:0 0 2px;letter-spacing:2px;font-family:Georgia,serif;">VASTRA KUTEER</h1>
+            <p style="color:rgba(255,255,255,0.85);font-size:11px;margin:0;letter-spacing:3px;text-transform:uppercase;">Ethnic Wear | Handcrafted with Love</p>
           </td>
         </tr>
 
