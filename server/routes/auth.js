@@ -366,7 +366,7 @@ router.post('/login', async (req, res) => {
 });
 
 // @route   POST /api/auth/send-login-otp
-// @desc    Generate and email an OTP for secure login
+// @desc    Generate and email an OTP for secure login (auto-registers if new user)
 // @access  Public
 router.post('/send-login-otp', async (req, res) => {
     try {
@@ -386,10 +386,6 @@ router.post('/send-login-otp', async (req, res) => {
             user = findUserByEmail(cleanEmail);
         }
 
-        if (!user) {
-            return res.status(404).json({ message: 'No account found with this email' });
-        }
-
         // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -404,7 +400,7 @@ router.post('/send-login-otp', async (req, res) => {
             from: `"Vastra Kuteer" <${DEFAULT_EMAIL_USER}>`,
             to: cleanEmail,
             subject: `Your Vastra Kuteer Login OTP: ${otp}`,
-            html: buildOtpEmail(otp, 'login', user.fullName || 'Valued Customer')
+            html: buildOtpEmail(otp, 'login', user ? (user.fullName || 'Valued Customer') : 'Valued Customer')
         };
 
         // Send email synchronously to ensure delivery before completing request
@@ -425,7 +421,7 @@ router.post('/send-login-otp', async (req, res) => {
 });
 
 // @route   POST /api/auth/login-otp
-// @desc    Verify OTP and log the user in
+// @desc    Verify OTP and log the user in (auto-registers new accounts)
 // @access  Public
 router.post('/login-otp', async (req, res) => {
     try {
@@ -456,10 +452,40 @@ router.post('/login-otp', async (req, res) => {
             user = findUserByEmail(cleanEmail);
         }
 
-        if (!user) return res.status(404).json({ message: 'User not found' });
+        let isNewUser = false;
 
-        sendTokenResponse(user, 200, res, 'Login successful via OTP');
+        // Auto-create user if account does not exist yet!
+        if (!user) {
+            isNewUser = true;
+            const newReferralCode = 'VK' + Math.random().toString(36).substring(2, 6).toUpperCase();
+            const rawName = cleanEmail.split('@')[0];
+            const fallbackName = rawName.replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Valued Customer';
+
+            if (mongoose.connection.readyState === 1) {
+                user = new User({
+                    fullName: fallbackName,
+                    email: cleanEmail,
+                    password: Math.random().toString(36).substring(2, 10),
+                    referralCode: newReferralCode,
+                    earnedCoupons: []
+                });
+                await user.save();
+            } else {
+                user = saveUser({
+                    fullName: fallbackName,
+                    email: cleanEmail,
+                    password: Math.random().toString(36).substring(2, 10),
+                    role: 'user',
+                    referralCode: newReferralCode,
+                    earnedCoupons: []
+                });
+            }
+            sendWelcomeEmail(fallbackName, cleanEmail).catch(err => console.error('Welcome email error:', err));
+        }
+
+        sendTokenResponse(user, 200, res, 'Login successful via OTP', isNewUser);
     } catch (err) {
+        console.error('OTP Login error:', err);
         res.status(500).json({ message: 'OTP Login failed' });
     }
 });
