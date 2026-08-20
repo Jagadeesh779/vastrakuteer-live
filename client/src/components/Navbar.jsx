@@ -76,7 +76,7 @@ const Navbar = () => {
                             </Link>
 
                             {/* Desktop Navigation */}
-                            <div className="flex space-x-6 lg:space-x-8 items-center pt-1 ml-10">
+                            <div className="flex space-x-6 lg:space-x-8 items-center pt-1 ml-auto mr-12">
                                 <Link to="/home" className="text-gray-900 hover:text-emerald-700 font-bold transition-colors relative group text-[16px] whitespace-nowrap">
                                     Home
                                     <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-600 transition-all group-hover:w-full"></span>
