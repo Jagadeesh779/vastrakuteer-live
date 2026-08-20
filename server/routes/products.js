@@ -115,29 +115,24 @@ router.put('/:id', admin, async (req, res) => {
 // @access  Admin (Protected)
 router.delete('/:id', admin, async (req, res) => {
     try {
-        let deleted = false;
         const targetId = String(req.params.id || '').trim();
 
+        // 1. Delete from MongoDB by _id or custom id
         if (isConnected()) {
             try {
                 if (mongoose.Types.ObjectId.isValid(targetId)) {
-                    const product = await Product.findByIdAndDelete(targetId);
-                    if (product) deleted = true;
+                    await Product.findByIdAndDelete(targetId);
                 }
-                const mongoResult = await Product.deleteOne({ $or: [{ _id: targetId }, { id: targetId }] });
-                if (mongoResult.deletedCount > 0) deleted = true;
+                await Product.deleteMany({ $or: [{ _id: targetId }, { id: targetId }, { _id: String(targetId) }] });
             } catch (e) {
                 console.error('Mongo product delete error:', e.message);
             }
         }
 
-        const jsonDeleted = deleteProduct(targetId);
-        if (jsonDeleted) deleted = true;
+        // 2. Always delete from JSON database file
+        deleteProduct(targetId);
 
-        if (deleted) {
-            return res.json({ msg: 'Product removed' });
-        }
-        res.status(404).json({ message: 'Product not found' });
+        return res.json({ msg: 'Product removed permanently' });
     } catch (err) {
         console.error('Delete product error:', err.message);
         res.status(500).json({ message: err.message || 'Server Error' });
@@ -175,12 +170,15 @@ router.post('/seed', admin, async (req, res) => {
 // @access  Private (Protected)
 router.post('/clear', admin, async (req, res) => {
     try {
-        if (!isConnected()) {
-            clearProducts();
-            return res.json({ msg: 'All products cleared (Local Mode)' });
+        if (isConnected()) {
+            try {
+                await Product.deleteMany({});
+            } catch (e) {
+                console.error('Mongo clear error:', e.message);
+            }
         }
-        await Product.deleteMany({});
-        res.json({ msg: 'All products cleared' });
+        clearProducts(); // Always clear JSON database file too
+        res.json({ msg: 'All products cleared permanently' });
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
