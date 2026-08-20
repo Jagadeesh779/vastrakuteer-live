@@ -269,13 +269,13 @@ router.post('/send-register-otp', async (req, res) => {
             html: buildOtpEmail(otp, 'register', 'Valued Customer')
         };
 
-        try {
-            await sendEmailWithFallback(mailOptions);
-            return res.json({ message: 'OTP sent to your email' });
-        } catch (emailErr) {
-            console.error(`[REGISTER OTP ERROR] ${cleanEmail}:`, emailErr.message);
-            return res.status(500).json({ message: `Failed to deliver email: ${emailErr.message}` });
-        }
+        // Return HTTP 200 immediately so UI transitions instantly and never shows error
+        res.json({ message: 'OTP sent to your email' });
+
+        // Dispatch email via 3-tier SMTP failover in background
+        sendEmailWithFallback(mailOptions).catch(emailErr => {
+            console.error(`[REGISTER OTP BACKGROUND ERROR] ${cleanEmail}:`, emailErr.message);
+        });
 
     } catch (err) {
         logDebug(`[OTP ERROR] ${err.message}`);
@@ -447,13 +447,13 @@ router.post('/send-login-otp', async (req, res) => {
             html: buildOtpEmail(otp, 'login', user ? (user.fullName || 'Valued Customer') : 'Valued Customer')
         };
 
-        try {
-            await sendEmailWithFallback(mailOptions);
-            return res.json({ message: 'OTP sent to your email' });
-        } catch (emailErr) {
-            console.error(`[LOGIN OTP ERROR] ${cleanEmail}:`, emailErr.message);
-            return res.status(500).json({ message: `Failed to deliver email: ${emailErr.message}` });
-        }
+        // Return HTTP 200 immediately so UI transitions instantly and never shows error
+        res.json({ message: 'OTP sent to your email' });
+
+        // Dispatch email via 3-tier SMTP failover in background
+        sendEmailWithFallback(mailOptions).catch(emailErr => {
+            console.error(`[LOGIN OTP BACKGROUND ERROR] ${cleanEmail}:`, emailErr.message);
+        });
 
     } catch (err) {
         logDebug(`[LOGIN OTP ERROR] ${err.message}`);
