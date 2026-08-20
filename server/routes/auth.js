@@ -79,32 +79,66 @@ const removeOtp = (type, email) => {
     } catch (e) {}
 };
 
-const DEFAULT_EMAIL_USER = process.env.EMAIL_USER || 'vastrakuteer9@gmail.com';
-const DEFAULT_EMAIL_PASS = process.env.EMAIL_PASS || 'lisxqpgpcqjuqkpp';
+const getEmailCreds = () => {
+    const user = (process.env.EMAIL_USER && process.env.EMAIL_USER.trim()) ? process.env.EMAIL_USER.trim() : 'vastrakuteer9@gmail.com';
+    const pass = (process.env.EMAIL_PASS && process.env.EMAIL_PASS.trim()) ? process.env.EMAIL_PASS.trim() : 'lisxqpgpcqjuqkpp';
+    return { user, pass };
+};
 
 const sendEmailWithFallback = async (mailOptions) => {
-    const primaryTransporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: { user: DEFAULT_EMAIL_USER, pass: DEFAULT_EMAIL_PASS },
-        tls: { rejectUnauthorized: false }
-    });
+    const { user, pass } = getEmailCreds();
+    
+    // Ensure from address matches exact SMTP user to pass SPF/DKIM validation
+    const sanitizedMailOptions = {
+        ...mailOptions,
+        from: `"Vastra Kuteer" <${user}>`
+    };
 
+    // Attempt 1: Service Gmail SSL Port 465
     try {
-        const info = await primaryTransporter.sendMail(mailOptions);
-        console.log(`[SMTP PRIMARY DELIVERED] To: ${mailOptions.to} | MsgId: ${info.messageId}`);
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: { user, pass },
+            tls: { rejectUnauthorized: false }
+        });
+        const info = await transporter.sendMail(sanitizedMailOptions);
+        console.log(`[SMTP DELIVERED via Gmail Service] To: ${sanitizedMailOptions.to} | MsgId: ${info.messageId}`);
         return info;
-    } catch (primaryErr) {
-        console.warn(`[SMTP PRIMARY FAILED] ${primaryErr.message}. Trying Port 587 TLS fallback...`);
-        const fallbackTransporter = nodemailer.createTransport({
+    } catch (err1) {
+        console.warn(`[SMTP Attempt 1 Failed] ${err1.message}. Trying Port 587 STARTTLS...`);
+    }
+
+    // Attempt 2: Explicit Host smtp.gmail.com Port 587 (STARTTLS)
+    try {
+        const transporter587 = nodemailer.createTransport({
             host: 'smtp.gmail.com',
             port: 587,
             secure: false,
-            auth: { user: DEFAULT_EMAIL_USER, pass: DEFAULT_EMAIL_PASS },
+            auth: { user, pass },
+            tls: { rejectUnauthorized: false, ciphers: 'SSLv3' }
+        });
+        const info = await transporter587.sendMail(sanitizedMailOptions);
+        console.log(`[SMTP DELIVERED via Port 587] To: ${sanitizedMailOptions.to} | MsgId: ${info.messageId}`);
+        return info;
+    } catch (err2) {
+        console.warn(`[SMTP Attempt 2 Failed] ${err2.message}. Trying Port 465 Direct SSL...`);
+    }
+
+    // Attempt 3: Explicit Host smtp.gmail.com Port 465 (Direct SSL)
+    try {
+        const transporter465 = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
+            auth: { user, pass },
             tls: { rejectUnauthorized: false }
         });
-        const info = await fallbackTransporter.sendMail(mailOptions);
-        console.log(`[SMTP FALLBACK DELIVERED] To: ${mailOptions.to} | MsgId: ${info.messageId}`);
+        const info = await transporter465.sendMail(sanitizedMailOptions);
+        console.log(`[SMTP DELIVERED via Port 465] To: ${sanitizedMailOptions.to} | MsgId: ${info.messageId}`);
         return info;
+    } catch (err3) {
+        console.error(`[ALL 3 SMTP ATTEMPTS FAILED] To: ${sanitizedMailOptions.to} - Error: ${err3.message}`);
+        throw err3;
     }
 };
 
