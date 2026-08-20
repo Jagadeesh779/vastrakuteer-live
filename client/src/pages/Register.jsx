@@ -36,7 +36,6 @@ const Register = () => {
 
     const handleSendOtp = async (e) => {
         e.preventDefault(); setError('');
-        if (emailExists) return;
         if (formData.password !== formData.confirmPassword) {
             setError('Passwords do not match'); return;
         }

@@ -223,7 +223,7 @@ router.post('/check-email', async (req, res) => {
 });
 
 // @route   POST /api/auth/send-register-otp
-// @desc    Generate and email an OTP for account creation
+// @desc    Generate and email an OTP for account creation / login
 // @access  Public
 router.post('/send-register-otp', async (req, res) => {
     try {
@@ -243,10 +243,6 @@ router.post('/send-register-otp', async (req, res) => {
             user = findUserByEmail(cleanEmail);
         }
 
-        if (user) {
-            return res.status(400).json({ message: 'User already exists' });
-        }
-
         // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -258,15 +254,15 @@ router.post('/send-register-otp', async (req, res) => {
         const mailOptions = {
             from: `"Vastra Kuteer" <${DEFAULT_EMAIL_USER}>`,
             to: cleanEmail,
-            subject: `Your Vastra Kuteer Registration OTP: ${otp}`,
+            subject: `Your Vastra Kuteer OTP Code: ${otp}`,
             priority: 'high',
             headers: {
                 'X-Priority': '1 (Highest)',
                 'X-MSMail-Priority': 'High',
                 'Importance': 'High'
             },
-            text: `Your Vastra Kuteer Registration OTP code is: ${otp}. It is valid for 10 minutes. Do not share this code with anyone.`,
-            html: buildOtpEmail(otp, 'register', 'Valued Customer')
+            text: `Your Vastra Kuteer OTP code is: ${otp}. It is valid for 10 minutes. Do not share this code with anyone.`,
+            html: buildOtpEmail(otp, 'register', user ? (user.fullName || 'Valued Customer') : 'Valued Customer')
         };
 
         // Return HTTP 200 immediately so UI transitions instantly and never shows error
@@ -284,7 +280,7 @@ router.post('/send-register-otp', async (req, res) => {
 });
 
 // @route   POST /api/auth/register
-// @desc    Register a new user
+// @desc    Register a new user or log in existing user seamlessly
 // @access  Public
 router.post('/register', async (req, res) => {
     const { fullName, email, password, otp, referredBy } = req.body;
@@ -308,14 +304,26 @@ router.post('/register', async (req, res) => {
 
         const newReferralCode = 'VK' + Math.random().toString(36).substring(2, 6).toUpperCase();
 
+        // Check if user already exists
+        let user = null;
+        if (mongoose.connection.readyState === 1) {
+            try {
+                user = await User.findOne({ email: new RegExp(`^${cleanEmail}$`, 'i') });
+            } catch (e) {}
+        }
+        if (!user) {
+            user = findUserByEmail(cleanEmail);
+        }
+
+        // If user already exists, log them in directly!
+        if (user) {
+            return sendTokenResponse(user, 200, res, 'Welcome back! Logged in successfully.');
+        }
+
         // Fallback to JSON DB if Mongo is offline
         if (mongoose.connection.readyState !== 1) {
             logDebug(`[REGISTER] Using JSON DB. Email: ${cleanEmail}`);
-            let user = findUserByEmail(cleanEmail);
-            if (user) {
-                return res.status(400).json({ message: 'User already exists' });
-            }
-            user = { fullName, email: cleanEmail, password, role: 'user', referralCode: newReferralCode, referredBy, earnedCoupons: [] };
+            user = { fullName: fullName || 'Valued Customer', email: cleanEmail, password, role: 'user', referralCode: newReferralCode, referredBy, earnedCoupons: [] };
 
             if (referredBy) {
                 const users = getAllUsers();
@@ -328,21 +336,13 @@ router.post('/register', async (req, res) => {
             }
 
             const savedUser = saveUser(user);
-            sendWelcomeEmail(fullName, cleanEmail).catch(err => console.error('Welcome email error:', err));
+            sendWelcomeEmail(fullName || 'Valued Customer', cleanEmail).catch(err => console.error('Welcome email error:', err));
             sendTokenResponse(savedUser, 201, res, 'User registered successfully (Local Mode)', true);
             return;
         }
 
         // MongoDB Logic
-        let user = await User.findOne({ email: new RegExp(`^${cleanEmail}$`, 'i') });
-        if (!user) {
-            user = findUserByEmail(cleanEmail);
-        }
-        if (user) {
-            return res.status(400).json({ message: 'User already exists' });
-        }
-
-        user = new User({ fullName, email: cleanEmail, password, referralCode: newReferralCode, referredBy, earnedCoupons: [] });
+        user = new User({ fullName: fullName || 'Valued Customer', email: cleanEmail, password, referralCode: newReferralCode, referredBy, earnedCoupons: [] });
         await user.save();
 
         if (referredBy) {
