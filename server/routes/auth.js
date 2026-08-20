@@ -82,25 +82,17 @@ const removeOtp = (type, email) => {
 const DEFAULT_EMAIL_USER = process.env.EMAIL_USER || 'vastrakuteer9@gmail.com';
 const DEFAULT_EMAIL_PASS = process.env.EMAIL_PASS || 'lisxqpgpcqjuqkpp';
 
-let cachedTransporter = null;
 const getTransporter = () => {
-    if (!cachedTransporter) {
-        cachedTransporter = nodemailer.createTransport({
-            service: 'gmail',
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true,
-            pool: true,
-            maxConnections: 5,
-            maxMessages: 100,
-            rateLimit: 10,
-            auth: {
-                user: DEFAULT_EMAIL_USER,
-                pass: DEFAULT_EMAIL_PASS
-            }
-        });
-    }
-    return cachedTransporter;
+    return nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: DEFAULT_EMAIL_USER,
+            pass: DEFAULT_EMAIL_PASS
+        },
+        tls: {
+            rejectUnauthorized: false
+        }
+    });
 };
 
 // Helper to send welcome email
@@ -113,22 +105,9 @@ const sendWelcomeEmail = async (name, email) => {
             subject: `Welcome to Vastra Kuteer, ${name}! 🎉`,
             html: buildWelcomeEmail(name, activeEvent)
         };
-        try {
-            const transporter = getTransporter();
-            await transporter.sendMail(mailOptions);
-            console.log(`[WELCOME EMAIL] Sent successfully to ${email}`);
-        } catch (primaryErr) {
-            console.warn(`[WELCOME EMAIL] Primary SMTP failed for ${email}: ${primaryErr.message}. Trying fallback...`);
-            const fallbackTransporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: DEFAULT_EMAIL_USER,
-                    pass: DEFAULT_EMAIL_PASS
-                }
-            });
-            await fallbackTransporter.sendMail(mailOptions);
-            console.log(`[WELCOME EMAIL] Sent via fallback SMTP to ${email}`);
-        }
+        const transporter = getTransporter();
+        await transporter.sendMail(mailOptions);
+        console.log(`[WELCOME EMAIL] Sent successfully to ${email}`);
     } catch (err) {
         console.error('Welcome email error:', err.message);
     }
@@ -218,8 +197,6 @@ router.post('/send-register-otp', async (req, res) => {
         console.log(`[REGISTER OTP GENERATED] ${cleanEmail} -> ${otp}`);
 
         // Setup Nodemailer
-        const transporter = getTransporter();
-
         const mailOptions = {
             from: `"Vastra Kuteer" <${DEFAULT_EMAIL_USER}>`,
             to: cleanEmail,
@@ -227,16 +204,16 @@ router.post('/send-register-otp', async (req, res) => {
             html: buildOtpEmail(otp, 'register', 'Valued Customer')
         };
 
-        // Send email synchronously to ensure delivery before completing request
-        try {
-            const info = await transporter.sendMail(mailOptions);
-            console.log(`[REGISTER OTP SENT] ${cleanEmail} -> ${otp} | MsgId: ${info.messageId}`);
-        } catch (mailErr) {
-            console.error(`[REGISTER OTP ERROR] ${cleanEmail}:`, mailErr.message);
-            return res.status(500).json({ message: `Failed to send OTP email: ${mailErr.message}` });
-        }
+        // Send HTTP response immediately so UI transitions instantly
+        res.json({ message: 'OTP sent to your email' });
 
-        return res.json({ message: 'OTP sent to your email' });
+        // Dispatch email via fresh transport
+        const transporter = getTransporter();
+        transporter.sendMail(mailOptions).then(info => {
+            console.log(`[REGISTER OTP SENT] ${cleanEmail} -> ${otp} | MsgId: ${info.messageId}`);
+        }).catch(err => {
+            console.error(`[REGISTER OTP ERROR] ${cleanEmail}:`, err.message);
+        });
 
     } catch (err) {
         logDebug(`[OTP ERROR] ${err.message}`);
@@ -394,8 +371,6 @@ router.post('/send-login-otp', async (req, res) => {
         console.log(`[LOGIN OTP GENERATED] ${cleanEmail} -> ${otp}`);
 
         // Setup Nodemailer
-        const transporter = getTransporter();
-
         const mailOptions = {
             from: `"Vastra Kuteer" <${DEFAULT_EMAIL_USER}>`,
             to: cleanEmail,
@@ -403,16 +378,16 @@ router.post('/send-login-otp', async (req, res) => {
             html: buildOtpEmail(otp, 'login', user ? (user.fullName || 'Valued Customer') : 'Valued Customer')
         };
 
-        // Send email synchronously to ensure delivery before completing request
-        try {
-            const info = await transporter.sendMail(mailOptions);
-            console.log(`[LOGIN OTP SENT] ${cleanEmail} -> ${otp} | MsgId: ${info.messageId}`);
-        } catch (mailErr) {
-            console.error(`[LOGIN OTP ERROR] ${cleanEmail}:`, mailErr.message);
-            return res.status(500).json({ message: `Failed to send OTP email: ${mailErr.message}` });
-        }
+        // Send HTTP response immediately so UI transitions instantly
+        res.json({ message: 'OTP sent to your email' });
 
-        return res.json({ message: 'OTP sent to your email' });
+        // Dispatch email via fresh transport
+        const transporter = getTransporter();
+        transporter.sendMail(mailOptions).then(info => {
+            console.log(`[LOGIN OTP SENT] ${cleanEmail} -> ${otp} | MsgId: ${info.messageId}`);
+        }).catch(err => {
+            console.error(`[LOGIN OTP ERROR] ${cleanEmail}:`, err.message);
+        });
 
     } catch (err) {
         logDebug(`[LOGIN OTP ERROR] ${err.message}`);
