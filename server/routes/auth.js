@@ -254,17 +254,12 @@ router.post('/register', async (req, res) => {
         const cleanEmail = (email || '').trim().toLowerCase();
         const inputOtp = otp.toString().trim();
 
-        // Support master test OTP 123456 or real generated OTP
-        const isMasterOtp = (inputOtp === '123456');
-
-        if (!isMasterOtp) {
-            const cached = retrieveOtp('register', cleanEmail);
-            if (!cached || Date.now() > cached.expires) {
-                return res.status(400).json({ message: 'OTP has expired or not requested' });
-            }
-            if (cached.otp.toString().trim() !== inputOtp) {
-                return res.status(400).json({ message: 'Incorrect OTP' });
-            }
+        const cached = retrieveOtp('register', cleanEmail);
+        if (!cached || Date.now() > cached.expires) {
+            return res.status(400).json({ message: 'OTP has expired or not requested' });
+        }
+        if (cached.otp.toString().trim() !== inputOtp) {
+            return res.status(400).json({ message: 'Incorrect OTP' });
         }
 
         // Clear OTP after successful verification
@@ -445,17 +440,12 @@ router.post('/login-otp', async (req, res) => {
         const cleanEmail = email.trim().toLowerCase();
         const inputOtp = otp.toString().trim();
 
-        // Support master test OTP 123456 or real generated OTP
-        const isMasterOtp = (inputOtp === '123456');
-
-        if (!isMasterOtp) {
-            const cached = retrieveOtp('login', cleanEmail);
-            if (!cached || Date.now() > cached.expires) {
-                return res.status(400).json({ message: 'OTP expired or not requested' });
-            }
-            if (cached.otp.toString().trim() !== inputOtp) {
-                return res.status(400).json({ message: 'Invalid OTP' });
-            }
+        const cached = retrieveOtp('login', cleanEmail);
+        if (!cached || Date.now() > cached.expires) {
+            return res.status(400).json({ message: 'OTP expired or not requested' });
+        }
+        if (cached.otp.toString().trim() !== inputOtp) {
+            return res.status(400).json({ message: 'Invalid OTP' });
         }
 
         // Clear OTP after successful verification
