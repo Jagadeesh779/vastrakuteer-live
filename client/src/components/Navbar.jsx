@@ -70,8 +70,8 @@ const Navbar = () => {
                                 <img src={logo} alt="Vastra Kuteer" style={{ height: '74px', width: 'auto', objectFit: 'contain', marginLeft: '20px' }} />
                                 {/* Brand Name Container (Move ONLY the name using marginLeft or transform) */}
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 0.95, marginLeft: '0px', transform: 'translateX(0px)' }}>
-                                    <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '2.8rem', fontWeight: 500, color: '#1a5c3a', lineHeight: 0.95, marginLeft: '65px' }}>Vastra</span>
-                                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.95rem', fontWeight: 700, letterSpacing: '0.35em', color: '#1a1a1a', textTransform: 'uppercase', marginTop: '-2px', marginLeft: '65px' }}>KUTEER</span>
+                                    <span style={{ fontFamily: "'Great Vibes', cursive", fontSize: '2.8rem', fontWeight: 500, color: '#1a5c3a', lineHeight: 0.95, marginLeft: '0px' }}>Vastra</span>
+                                    <span style={{ fontFamily: 'Georgia, serif', fontSize: '0.95rem', fontWeight: 700, letterSpacing: '0.35em', color: '#1a1a1a', textTransform: 'uppercase', marginTop: '-2px', marginLeft: '0px' }}>KUTEER</span>
                                 </div>
                             </Link>
 
