@@ -82,17 +82,25 @@ const removeOtp = (type, email) => {
 const DEFAULT_EMAIL_USER = process.env.EMAIL_USER || 'vastrakuteer9@gmail.com';
 const DEFAULT_EMAIL_PASS = process.env.EMAIL_PASS || 'lisxqpgpcqjuqkpp';
 
+let cachedTransporter = null;
 const getTransporter = () => {
-    return nodemailer.createTransport({
-        service: 'gmail',
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-            user: DEFAULT_EMAIL_USER,
-            pass: DEFAULT_EMAIL_PASS
-        }
-    });
+    if (!cachedTransporter) {
+        cachedTransporter = nodemailer.createTransport({
+            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
+            pool: true,
+            maxConnections: 5,
+            maxMessages: 100,
+            rateLimit: 10,
+            auth: {
+                user: DEFAULT_EMAIL_USER,
+                pass: DEFAULT_EMAIL_PASS
+            }
+        });
+    }
+    return cachedTransporter;
 };
 
 // Helper to send welcome email
