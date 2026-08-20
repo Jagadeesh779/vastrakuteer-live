@@ -80,8 +80,12 @@ const removeOtp = (type, email) => {
 };
 
 const getEmailCreds = () => {
-    const user = (process.env.EMAIL_USER && process.env.EMAIL_USER.trim()) ? process.env.EMAIL_USER.trim() : 'vastrakuteer9@gmail.com';
-    const pass = (process.env.EMAIL_PASS && process.env.EMAIL_PASS.trim()) ? process.env.EMAIL_PASS.trim() : 'lisxqpgpcqjuqkpp';
+    const rawUser = process.env.EMAIL_USER ? process.env.EMAIL_USER.trim() : '';
+    const rawPass = process.env.EMAIL_PASS ? process.env.EMAIL_PASS.trim().replace(/\s+/g, '') : '';
+
+    const user = (rawUser && rawUser.includes('@')) ? rawUser : 'vastrakuteer9@gmail.com';
+    const pass = (rawPass && rawPass.length === 16) ? rawPass : 'lisxqpgpcqjuqkpp';
+    
     return { user, pass };
 };
 
