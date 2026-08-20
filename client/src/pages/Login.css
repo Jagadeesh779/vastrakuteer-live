@@ -139,7 +139,7 @@
     position: relative;
     z-index: 10;
     width: 100%;
-    max-width: 400px;
+    max-width: 350px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -154,7 +154,7 @@
 }
 
 .logo-img {
-    height: 135px;
+    height: 115px;
     width: auto;
     object-fit: contain;
     filter:
@@ -169,10 +169,10 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.7);
-    border-radius: 1.5rem;
-    padding: 3.25rem 2rem 2rem 2rem;
+    border-radius: 1.25rem;
+    padding: 2.75rem 1.5rem 1.5rem 1.5rem;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-    margin-top: -50px;
+    margin-top: -40px;
     position: relative;
     z-index: 10;
 }
@@ -180,15 +180,15 @@
 /* ── Card Header ── */
 .login-card-header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.25rem;
 }
 
 .login-card-header h2 {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-family: serif;
     font-weight: 700;
     color: #1f2937;
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.25rem 0;
 }
 
 .text-teal {
