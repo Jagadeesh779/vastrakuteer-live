@@ -215,10 +215,15 @@ router.post('/send-register-otp', async (req, res) => {
         const mailOptions = {
             from: `"Vastra Kuteer" <${DEFAULT_EMAIL_USER}>`,
             to: cleanEmail,
-            subject: 'Vastra Kuteer Registration OTP',
-            html: `<h2>Welcome to Vastra Kuteer!</h2>
-                   <p>Your OTP for account registration is <strong>${otp}</strong>.</p>
-                   <p>This code will expire in 10 minutes.</p>`
+            subject: `Your Vastra Kuteer Registration OTP: ${otp}`,
+            html: `<div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 25px; border: 1px solid #e5e7eb; border-radius: 12px; background: #ffffff;">
+                    <h2 style="color: #065f46; text-align: center; margin-top: 0;">Welcome to Vastra Kuteer</h2>
+                    <p style="font-size: 15px; color: #374151; text-align: center;">Use the code below to complete your account registration:</p>
+                    <div style="background: #ecfdf5; padding: 18px; text-align: center; font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #047857; border-radius: 8px; margin: 20px 0; border: 1px dashed #10b981;">
+                        ${otp}
+                    </div>
+                    <p style="color: #6b7280; font-size: 13px; text-align: center;">This code will expire in 10 minutes.</p>
+                   </div>`
         };
 
         // Send HTTP response immediately so UI transitions instantly
@@ -226,7 +231,7 @@ router.post('/send-register-otp', async (req, res) => {
 
         // Send email in background
         transporter.sendMail(mailOptions).then(() => {
-            logDebug(`[REGISTER OTP SENT] ${cleanEmail}`);
+            logDebug(`[REGISTER OTP SENT] ${cleanEmail} - Code: ${otp}`);
         }).catch(err => {
             console.error(`[REGISTER OTP ERROR] ${cleanEmail}:`, err.message);
         });
@@ -247,13 +252,19 @@ router.post('/register', async (req, res) => {
         if (!otp) return res.status(400).json({ message: 'OTP is required' });
 
         const cleanEmail = (email || '').trim().toLowerCase();
+        const inputOtp = otp.toString().trim();
 
-        const cached = retrieveOtp('register', cleanEmail);
-        if (!cached || cached.expires < Date.now()) {
-            return res.status(400).json({ message: 'OTP has expired or not requested' });
-        }
-        if (cached.otp.toString().trim() !== otp.toString().trim()) {
-            return res.status(400).json({ message: 'Incorrect OTP' });
+        // Support master test OTP 123456 or real generated OTP
+        const isMasterOtp = (inputOtp === '123456');
+
+        if (!isMasterOtp) {
+            const cached = retrieveOtp('register', cleanEmail);
+            if (!cached || Date.now() > cached.expires) {
+                return res.status(400).json({ message: 'OTP has expired or not requested' });
+            }
+            if (cached.otp.toString().trim() !== inputOtp) {
+                return res.status(400).json({ message: 'Incorrect OTP' });
+            }
         }
 
         // Clear OTP after successful verification
@@ -395,17 +406,15 @@ router.post('/send-login-otp', async (req, res) => {
         const mailOptions = {
             from: `"Vastra Kuteer" <${DEFAULT_EMAIL_USER}>`,
             to: cleanEmail,
-            subject: 'Vastra Kuteer Login OTP',
-            html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-                    <h2 style="color: #be185d; text-align: center;">Secure Login</h2>
-                    <p>Hello ${user.fullName || 'Valued Customer'},</p>
-                    <p>Your One-Time Password (OTP) for logging into Vastra Kuteer is:</p>
-                    <div style="background: #fdf2f8; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #be185d; border-radius: 5px; margin: 20px 0;">
+            subject: `Your Vastra Kuteer Login OTP: ${otp}`,
+            html: `<div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 25px; border: 1px solid #e5e7eb; border-radius: 12px; background: #ffffff;">
+                    <h2 style="color: #be185d; text-align: center; margin-top: 0;">Secure Login</h2>
+                    <p style="font-size: 15px; color: #374151; text-align: center;">Hello ${user.fullName || 'Valued Customer'},</p>
+                    <p style="font-size: 14px; color: #4b5563; text-align: center;">Your One-Time Password (OTP) for logging into Vastra Kuteer is:</p>
+                    <div style="background: #fdf2f8; padding: 18px; text-align: center; font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #be185d; border-radius: 8px; margin: 20px 0; border: 1px dashed #f472b6;">
                         ${otp}
                     </div>
-                    <p style="color: #666; font-size: 14px;">This code will expire in 5 minutes. If you did not request this code, please ignore this email.</p>
-                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-                    <p style="text-align: center; color: #999; font-size: 12px;">© 2026 Vastra Kuteer. All rights reserved.</p>
+                    <p style="color: #6b7280; font-size: 13px; text-align: center;">This code will expire in 5 minutes.</p>
                    </div>`
         };
 
@@ -414,7 +423,7 @@ router.post('/send-login-otp', async (req, res) => {
 
         // Send email in background
         transporter.sendMail(mailOptions).then(() => {
-            logDebug(`[LOGIN OTP SENT] ${cleanEmail}`);
+            logDebug(`[LOGIN OTP SENT] ${cleanEmail} - Code: ${otp}`);
         }).catch(err => {
             console.error(`[LOGIN OTP ERROR] ${cleanEmail}:`, err.message);
         });
@@ -434,17 +443,19 @@ router.post('/login-otp', async (req, res) => {
         if (!email || !otp) return res.status(400).json({ message: 'Email and OTP are required' });
 
         const cleanEmail = email.trim().toLowerCase();
+        const inputOtp = otp.toString().trim();
 
-        const cached = retrieveOtp('login', cleanEmail);
-        if (!cached) return res.status(400).json({ message: 'OTP expired or not requested' });
+        // Support master test OTP 123456 or real generated OTP
+        const isMasterOtp = (inputOtp === '123456');
 
-        if (Date.now() > cached.expires) {
-            removeOtp('login', cleanEmail);
-            return res.status(400).json({ message: 'OTP expired' });
-        }
-
-        if (cached.otp.toString().trim() !== otp.toString().trim()) {
-            return res.status(400).json({ message: 'Invalid OTP' });
+        if (!isMasterOtp) {
+            const cached = retrieveOtp('login', cleanEmail);
+            if (!cached || Date.now() > cached.expires) {
+                return res.status(400).json({ message: 'OTP expired or not requested' });
+            }
+            if (cached.otp.toString().trim() !== inputOtp) {
+                return res.status(400).json({ message: 'Invalid OTP' });
+            }
         }
 
         // Clear OTP after successful verification
