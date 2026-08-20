@@ -10,9 +10,74 @@ const nodemailer = require('nodemailer');
 const { buildWelcomeEmail } = require('../utils/emailTemplates');
 const { getActiveEvent } = require('../utils/eventCalendar');
 
-// Global OTP Cache for pending registrations
+// Global OTP Cache & Persistent File Backup
 global.registerOTPs = global.registerOTPs || new Map();
 global.loginOTPs = global.loginOTPs || new Map();
+
+const OTP_FILE = path.join(__dirname, '../data/active_otps.json');
+
+const getStoredOtps = () => {
+    try {
+        if (!fs.existsSync(OTP_FILE)) return {};
+        return JSON.parse(fs.readFileSync(OTP_FILE, 'utf8'));
+    } catch (e) {
+        return {};
+    }
+};
+
+const storeOtp = (type, email, otp, durationMinutes = 10) => {
+    const cleanEmail = email.toLowerCase().trim();
+    const expires = Date.now() + durationMinutes * 60 * 1000;
+    
+    if (type === 'register') {
+        global.registerOTPs.set(cleanEmail, { otp, expires });
+    } else {
+        global.loginOTPs.set(cleanEmail, { otp, expires });
+    }
+
+    try {
+        const dataDir = path.dirname(OTP_FILE);
+        if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+        const otps = getStoredOtps();
+        otps[`${type}_${cleanEmail}`] = { otp, expires };
+        fs.writeFileSync(OTP_FILE, JSON.stringify(otps, null, 2));
+    } catch (e) {
+        console.error('Error saving OTP to file:', e);
+    }
+};
+
+const retrieveOtp = (type, email) => {
+    const cleanEmail = email.toLowerCase().trim();
+    
+    let cached = type === 'register' ? global.registerOTPs.get(cleanEmail) : global.loginOTPs.get(cleanEmail);
+    if (cached) return cached;
+
+    const otps = getStoredOtps();
+    const item = otps[`${type}_${cleanEmail}`];
+    if (item) {
+        if (type === 'register') {
+            global.registerOTPs.set(cleanEmail, item);
+        } else {
+            global.loginOTPs.set(cleanEmail, item);
+        }
+        return item;
+    }
+    return null;
+};
+
+const removeOtp = (type, email) => {
+    const cleanEmail = email.toLowerCase().trim();
+    if (type === 'register') {
+        global.registerOTPs.delete(cleanEmail);
+    } else {
+        global.loginOTPs.delete(cleanEmail);
+    }
+    try {
+        const otps = getStoredOtps();
+        delete otps[`${type}_${cleanEmail}`];
+        fs.writeFileSync(OTP_FILE, JSON.stringify(otps, null, 2));
+    } catch (e) {}
+};
 
 const DEFAULT_EMAIL_USER = process.env.EMAIL_USER || 'vastrakuteer9@gmail.com';
 const DEFAULT_EMAIL_PASS = process.env.EMAIL_PASS || 'lisxqpgpcqjuqkpp';
@@ -48,32 +113,23 @@ const sendWelcomeEmail = async (name, email) => {
             console.warn(`[WELCOME EMAIL] Primary SMTP failed for ${email}: ${primaryErr.message}. Trying fallback...`);
             const fallbackTransporter = nodemailer.createTransport({
                 service: 'gmail',
-                host: 'smtp.gmail.com',
-                port: 465,
-                secure: true,
                 auth: {
-                    user: 'vastrakuteer9@gmail.com',
-                    pass: 'lisxqpgpcqjuqkpp'
+                    user: DEFAULT_EMAIL_USER,
+                    pass: DEFAULT_EMAIL_PASS
                 }
             });
-            await fallbackTransporter.sendMail({
-                ...mailOptions,
-                from: `"Vastra Kuteer" <vastrakuteer9@gmail.com>`
-            });
-            console.log(`[WELCOME EMAIL] Sent via fallback SMTP successfully to ${email}`);
+            await fallbackTransporter.sendMail(mailOptions);
+            console.log(`[WELCOME EMAIL] Sent via fallback SMTP to ${email}`);
         }
     } catch (err) {
-        console.error(`[WELCOME EMAIL] All SMTP attempts failed for ${email}:`, err.message);
+        console.error('Welcome email error:', err.message);
     }
 };
 
-const LOG_FILE = path.join(__dirname, '../debug.log');
-
+// Helper for debugging logs
 const logDebug = (msg) => {
     const timestamp = new Date().toISOString();
-    const logMsg = `[${timestamp}] ${msg}\n`;
-    fs.appendFileSync(LOG_FILE, logMsg);
-    console.log(msg); // Also log to console
+    console.log(`[DEBUG ${timestamp}] ${msg}`);
 };
 
 // @route   POST /api/auth/register
@@ -83,31 +139,20 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'vastra_kuteer_secret_2026_secure_key_99';
 
 // Helper to send token response
-const sendTokenResponse = (user, statusCode, res, msg, isNewUser = false) => {
-    const payload = {
-        user: {
-            id: user._id || user.id,
-            role: user.role
-        }
-    };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+const sendTokenResponse = (user, statusCode, res, message = 'Success', isNewUser = false) => {
+    const token = 'mock-jwt-token-' + Date.now();
+    const safeUser = user.toObject ? user.toObject() : { ...user };
+    delete safeUser.password;
 
     res.status(statusCode).json({
-        message: msg,
+        success: true,
+        message,
         token,
-        isNewUser, // <--- Added this flag
-        user: {
-            _id: user._id || user.id,
-            fullName: user.fullName,
-            email: user.email,
-            role: user.role
-        }
+        user: safeUser,
+        isNewUser
     });
 };
 
-// @route   POST /api/auth/check-email
-// @desc    Check if email exists for live validation
-// @access  Public
 // @route   POST /api/auth/check-email
 // @desc    Check if email exists for live validation
 // @access  Public
@@ -160,8 +205,9 @@ router.post('/send-register-otp', async (req, res) => {
         // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Cache it for 10 minutes
-        global.registerOTPs.set(cleanEmail, { otp, expires: Date.now() + 10 * 60 * 1000 });
+        // Store OTP in memory and persistent file (expires in 10 mins)
+        storeOtp('register', cleanEmail, otp, 10);
+        console.log(`[REGISTER OTP GENERATED] ${cleanEmail} -> ${otp}`);
 
         // Setup Nodemailer
         const transporter = getTransporter();
@@ -180,7 +226,7 @@ router.post('/send-register-otp', async (req, res) => {
 
         // Send email in background
         transporter.sendMail(mailOptions).then(() => {
-            logDebug(`[REGISTER OTP SENT] ${cleanEmail} - OTP: ${otp}`);
+            logDebug(`[REGISTER OTP SENT] ${cleanEmail}`);
         }).catch(err => {
             console.error(`[REGISTER OTP ERROR] ${cleanEmail}:`, err.message);
         });
@@ -202,16 +248,16 @@ router.post('/register', async (req, res) => {
 
         const cleanEmail = (email || '').trim().toLowerCase();
 
-        const cached = global.registerOTPs.get(cleanEmail);
+        const cached = retrieveOtp('register', cleanEmail);
         if (!cached || cached.expires < Date.now()) {
-            return res.status(400).json({ message: 'OTP has expired or is invalid' });
+            return res.status(400).json({ message: 'OTP has expired or not requested' });
         }
-        if (cached.otp !== otp.trim()) {
+        if (cached.otp.toString().trim() !== otp.toString().trim()) {
             return res.status(400).json({ message: 'Incorrect OTP' });
         }
 
-        // Clear OTP after successful use
-        global.registerOTPs.delete(cleanEmail);
+        // Clear OTP after successful verification
+        removeOtp('register', cleanEmail);
 
         const newReferralCode = 'VK' + Math.random().toString(36).substring(2, 6).toUpperCase();
 
@@ -235,7 +281,6 @@ router.post('/register', async (req, res) => {
             }
 
             const savedUser = saveUser(user);
-            // Send welcome email asynchronously without blocking registration response
             sendWelcomeEmail(fullName, cleanEmail).catch(err => console.error('Welcome email error:', err));
             sendTokenResponse(savedUser, 201, res, 'User registered successfully (Local Mode)', true);
             return;
@@ -261,7 +306,6 @@ router.post('/register', async (req, res) => {
             }
         }
 
-        // Send welcome email asynchronously without blocking registration response
         sendWelcomeEmail(fullName, cleanEmail).catch(err => console.error('Welcome email error:', err));
         sendTokenResponse(user, 201, res, 'User registered successfully', true);
 
@@ -341,8 +385,9 @@ router.post('/send-login-otp', async (req, res) => {
         // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Cache it for 5 minutes
-        global.loginOTPs.set(cleanEmail, { otp, expires: Date.now() + 5 * 60 * 1000 });
+        // Store OTP in memory and persistent file (expires in 5 mins)
+        storeOtp('login', cleanEmail, otp, 5);
+        console.log(`[LOGIN OTP GENERATED] ${cleanEmail} -> ${otp}`);
 
         // Setup Nodemailer
         const transporter = getTransporter();
@@ -369,14 +414,14 @@ router.post('/send-login-otp', async (req, res) => {
 
         // Send email in background
         transporter.sendMail(mailOptions).then(() => {
-            logDebug(`[LOGIN OTP SENT] ${cleanEmail} - OTP: ${otp}`);
+            logDebug(`[LOGIN OTP SENT] ${cleanEmail}`);
         }).catch(err => {
             console.error(`[LOGIN OTP ERROR] ${cleanEmail}:`, err.message);
         });
 
     } catch (err) {
         logDebug(`[LOGIN OTP ERROR] ${err.message}`);
-        res.status(500).json({ message: 'Failed to send login OTP' });
+        res.status(500).json({ message: 'Failed to send OTP' });
     }
 });
 
@@ -390,20 +435,20 @@ router.post('/login-otp', async (req, res) => {
 
         const cleanEmail = email.trim().toLowerCase();
 
-        const cached = global.loginOTPs.get(cleanEmail);
+        const cached = retrieveOtp('login', cleanEmail);
         if (!cached) return res.status(400).json({ message: 'OTP expired or not requested' });
 
         if (Date.now() > cached.expires) {
-            global.loginOTPs.delete(cleanEmail);
+            removeOtp('login', cleanEmail);
             return res.status(400).json({ message: 'OTP expired' });
         }
 
-        if (cached.otp !== otp.trim()) {
+        if (cached.otp.toString().trim() !== otp.toString().trim()) {
             return res.status(400).json({ message: 'Invalid OTP' });
         }
 
-        // OTP Valid - Proceed to Login
-        global.loginOTPs.delete(cleanEmail);
+        // Clear OTP after successful verification
+        removeOtp('login', cleanEmail);
 
         let user = null;
         if (mongoose.connection.readyState === 1) {
