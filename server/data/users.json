@@ -140,5 +140,13 @@
     "role": "user",
     "_id": "1775275835199",
     "createdAt": "2026-04-04T04:10:35.200Z"
+  },
+  {
+    "fullName": "Kailash",
+    "email": "mahankalikailash25@gmail.com",
+    "password": "Password123!",
+    "role": "user",
+    "_id": "1787216100000",
+    "createdAt": "2026-08-20T14:24:00.000Z"
   }
 ]
