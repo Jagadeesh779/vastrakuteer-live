@@ -201,6 +201,7 @@ router.post('/send-register-otp', async (req, res) => {
             from: `"Vastra Kuteer" <${DEFAULT_EMAIL_USER}>`,
             to: cleanEmail,
             subject: `Your Vastra Kuteer Registration OTP: ${otp}`,
+            text: `Your Vastra Kuteer Registration OTP code is: ${otp}. It is valid for 10 minutes. Do not share this code with anyone.`,
             html: buildOtpEmail(otp, 'register', 'Valued Customer')
         };
 
@@ -375,6 +376,7 @@ router.post('/send-login-otp', async (req, res) => {
             from: `"Vastra Kuteer" <${DEFAULT_EMAIL_USER}>`,
             to: cleanEmail,
             subject: `Your Vastra Kuteer Login OTP: ${otp}`,
+            text: `Your Vastra Kuteer Login OTP code is: ${otp}. It is valid for 5 minutes. Do not share this code with anyone.`,
             html: buildOtpEmail(otp, 'login', user ? (user.fullName || 'Valued Customer') : 'Valued Customer')
         };
 
