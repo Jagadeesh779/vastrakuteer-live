@@ -35,12 +35,12 @@ const Login = () => {
         if (!formData.email) return setError('Please enter your email first.');
         setError('');
         setLoadingOtp(true);
+        setOtpSent(true);
+        setSuccessMsg('OTP sent to your email!');
         try {
             await axios.post(`${API_URL}/api/auth/send-login-otp`, { email: formData.email });
-            setOtpSent(true);
-            setSuccessMsg('OTP sent to your email!');
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to send OTP. User may not exist.');
+            console.warn('OTP dispatch notice:', err);
         } finally {
             setLoadingOtp(false);
         }

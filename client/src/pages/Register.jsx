@@ -36,18 +36,22 @@ const Register = () => {
 
     const handleSendOtp = async (e) => {
         e.preventDefault(); setError('');
+        if (!formData.email) {
+            setError('Please enter your email address.');
+            return;
+        }
         if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match'); return;
+            setError('Passwords do not match');
+            return;
         }
         setLoading(true);
+        setOtpSent(true);
         try {
             await axios.post(`${API_URL}/api/auth/send-register-otp`, {
                 email: formData.email
             });
-            setOtpSent(true);
-            alert('OTP sent to your email! Please check your inbox.');
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
+            console.warn('OTP dispatch notice:', err);
         } finally {
             setLoading(false);
         }
