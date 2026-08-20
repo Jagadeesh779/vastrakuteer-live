@@ -506,8 +506,10 @@ const AdminDashboard = () => {
 
             if (currentProduct) {
                 await axios.put(`${API_URL}/api/products/${currentProduct._id}`, payload);
+                addNotif('✅ Product updated successfully!', 'success');
             } else {
                 await axios.post(`${API_URL}/api/products`, payload);
+                addNotif('✅ Product added successfully!', 'success');
             }
             fetchData();
             closeProductModal();
@@ -530,9 +532,27 @@ const AdminDashboard = () => {
     const handleProductDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this product?')) {
             try {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    axios.defaults.headers.common['x-auth-token'] = token;
+                }
                 await axios.delete(`${API_URL}/api/products/${id}`);
+                addNotif('✅ Product deleted successfully!', 'success');
                 fetchData();
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                console.error('Error deleting product:', err);
+                if (err.response?.status === 401 || err.response?.data?.msg === 'Token is not valid') {
+                    alert('Session expired or invalid login token. Please log in again.');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    navigate('/login');
+                    return;
+                }
+                const serverMsg = typeof err.response?.data === 'string'
+                    ? err.response.data
+                    : (err.response?.data?.message || err.response?.data?.msg || err.message);
+                alert(`Failed to delete product: ${serverMsg || 'Check product permissions.'}`);
+            }
         }
     };
 
@@ -599,16 +619,17 @@ const AdminDashboard = () => {
             setProductForm({
                 ...product,
                 images: product.images || [],
-                count: product.count !== undefined ? product.count : 10
+                count: product.count !== undefined ? product.count : 10,
+                sizes: product.sizes || { S: 0, M: 0, L: 0, XL: 0, XXL: 0, XXXL: 0, Saree: 0 }
             });
         } else {
             setCurrentProduct(null);
             setProductForm({
-                brand: 'Vastra Kuteer', name: '', price: '', originalPrice: '', image: '', images: [], category: '', description: '',
+                brand: 'Vastra Kuteer', name: '', price: '', originalPrice: '', image: '', images: [], category: 'Sarees', description: '',
                 material: '', pattern: '', occasion: '', countryOfOrigin: 'India',
                 weavingRegion: '', fabricCare: '', isHandloom: true,
                 showOnHome: false, showOnShop: true, showOnCollections: true,
-                rating: 4.5, reviews: 0, count: 10, sizes: {}
+                rating: 4.5, reviews: 0, count: 10, sizes: { S: 0, M: 0, L: 0, XL: 0, XXL: 0, XXXL: 0, Saree: 0 }
             });
         }
         setIsProductModalOpen(true);

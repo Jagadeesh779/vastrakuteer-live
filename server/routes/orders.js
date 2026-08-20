@@ -54,8 +54,9 @@ router.post('/', async (req, res) => {
                 const qty = Math.max(1, Number(item.qty) || 1);
                 const size = item.selectedSize;
 
-                if (isConnected()) {
-                    const product = await Product.findById(productId);
+                let product = null;
+                if (isConnected() && mongoose.Types.ObjectId.isValid(productId)) {
+                    product = await Product.findById(productId);
                     if (product) {
                         const originalSizes = JSON.parse(JSON.stringify(product.sizes || {}));
                         processedProducts.push({ id: productId, originalSizes, type: 'mongo' });
@@ -70,14 +71,16 @@ router.post('/', async (req, res) => {
                         product.isSoldOut = product.count <= 0;
                         await product.save();
                     }
-                } else {
+                }
+
+                if (!product) {
                     const allProducts = getProducts();
-                    const product = allProducts.find(p => p._id === productId);
-                    if (product) {
-                        const originalSizes = JSON.parse(JSON.stringify(product.sizes || {}));
+                    const jsonProduct = allProducts.find(p => p._id === productId);
+                    if (jsonProduct) {
+                        const originalSizes = JSON.parse(JSON.stringify(jsonProduct.sizes || {}));
                         processedProducts.push({ id: productId, originalSizes, type: 'json' });
 
-                        const sizes = { ...(product.sizes || {}) };
+                        const sizes = { ...(jsonProduct.sizes || {}) };
                         if (size && sizes[size] !== undefined) {
                             const available = Math.max(0, Number(sizes[size]) || 0);
                             sizes[size] = available - Math.min(qty, available);

@@ -128,10 +128,34 @@ const User = require('./models/User');
 const DEFAULT_FLASH_EMAIL_USER = process.env.EMAIL_USER || 'vastrakuteer9@gmail.com';
 const DEFAULT_FLASH_EMAIL_PASS = process.env.EMAIL_PASS || 'lisxqpgpcqjuqkpp';
 
+const SENT_LOG_FILE = path.join(__dirname, 'data/sent_email_events.json');
+
+const getSentEvents = () => {
+    try {
+        if (fs.existsSync(SENT_LOG_FILE)) {
+            return JSON.parse(fs.readFileSync(SENT_LOG_FILE, 'utf8'));
+        }
+    } catch (e) { }
+    return {};
+};
+
+const recordSentEvent = (eventKey) => {
+    try {
+        const sentMap = getSentEvents();
+        sentMap[eventKey] = new Date().toISOString();
+        if (!fs.existsSync(path.dirname(SENT_LOG_FILE))) {
+            fs.mkdirSync(path.dirname(SENT_LOG_FILE), { recursive: true });
+        }
+        fs.writeFileSync(SENT_LOG_FILE, JSON.stringify(sentMap, null, 2));
+    } catch (e) {
+        console.error('Failed to record sent email event:', e.message);
+    }
+};
+
 /**
- * Core function: gather all user emails from DB and send flash sale blast.
+ * Core function: gather all user emails from both DBs and send flash sale blast.
  * Works for ALL events in the calendar.
- * Called by the daily cron AND by the admin manual-trigger endpoint.
+ * Called by the daily cron, startup check, AND by the admin manual-trigger endpoint.
  */
 const sendFlashSaleEmails = async (event) => {
     const transporter = nodemailer.createTransport({
@@ -142,19 +166,26 @@ const sendFlashSaleEmails = async (event) => {
         auth: { user: DEFAULT_FLASH_EMAIL_USER, pass: DEFAULT_FLASH_EMAIL_PASS }
     });
 
-    // Collect emails from both MongoDB and JSON fallback
-    let recipients = [];
+    // Collect emails from both MongoDB and JSON fallback without duplicates
+    let recipientsMap = new Map();
     try {
         if (mongoose.connection.readyState === 1) {
-            const users = await User.find({}, 'fullName email');
-            recipients = users.map(u => ({ name: u.fullName || 'Valued Customer', email: u.email }));
-        } else {
-            const users = getAllUsers();
-            recipients = users.map(u => ({ name: u.fullName || 'Valued Customer', email: u.email }));
+            const mongoUsers = await User.find({}, 'fullName email');
+            mongoUsers.forEach(u => {
+                if (u.email) recipientsMap.set(u.email.toLowerCase(), { name: u.fullName || 'Valued Customer', email: u.email });
+            });
         }
+        const jsonUsers = getAllUsers();
+        jsonUsers.forEach(u => {
+            if (u.email && !recipientsMap.has(u.email.toLowerCase())) {
+                recipientsMap.set(u.email.toLowerCase(), { name: u.fullName || 'Valued Customer', email: u.email });
+            }
+        });
     } catch (e) {
         console.error('[FLASH EMAIL] Failed to fetch users:', e.message);
     }
+
+    let recipients = Array.from(recipientsMap.values());
 
     if (recipients.length === 0) {
         console.log('[FLASH EMAIL] No recipients found.');
@@ -183,22 +214,37 @@ const sendFlashSaleEmails = async (event) => {
     return { sent, failed };
 };
 
+const checkAndTriggerEventEmails = async () => {
+    try {
+        const eventToSend = getUpcomingEvent() || getActiveEvent();
+        if (!eventToSend) return;
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        const eventKey = `${eventToSend.id}_${todayStr}`;
+        const sentMap = getSentEvents();
+
+        if (sentMap[eventKey]) {
+            console.log(`[AUTO FLASH EMAIL] Already sent today for event: ${eventToSend.name} (${eventKey})`);
+            return;
+        }
+
+        console.log(`[AUTO FLASH EMAIL] 🎉 Auto-triggering "${eventToSend.name}" event blast...`);
+        const result = await sendFlashSaleEmails(eventToSend);
+        if (result.sent > 0) {
+            recordSentEvent(eventKey);
+        }
+    } catch (err) {
+        console.error('[AUTO FLASH EMAIL ERROR]:', err.message);
+    }
+};
+
 // Export so admin route can call it manually
 module.exports.sendFlashSaleEmails = sendFlashSaleEmails;
+module.exports.checkAndTriggerEventEmails = checkAndTriggerEventEmails;
 
 // ── Daily cron: fires at 9 AM IST, auto-detects upcoming or active event ─────
 cron.schedule('0 9 * * *', async () => {
-    try {
-        const eventToSend = getUpcomingEvent() || getActiveEvent(); // checks ALL 24 events
-        if (!eventToSend) {
-            console.log('[FLASH EMAIL CRON] No active or upcoming event. Skipping.');
-            return;
-        }
-        console.log(`[FLASH EMAIL CRON] 🎉 Event: ${eventToSend.emoji} ${eventToSend.name}. Blasting emails to all users...`);
-        await sendFlashSaleEmails(eventToSend);
-    } catch (err) {
-        console.error('[FLASH EMAIL CRON] Error:', err.message);
-    }
+    await checkAndTriggerEventEmails();
 }, { timezone: 'Asia/Kolkata' });
 
 // ── One-Time Blast: Summer Sale Reminder on May 10 at 9 AM IST ───────────────
@@ -216,6 +262,11 @@ cron.schedule('0 9 10 5 *', async () => {
         console.error('[MAY 10 BLAST] Error:', err.message);
     }
 }, { timezone: 'Asia/Kolkata' });
+
+// Run startup check after 5 seconds to catch active events on server boot
+setTimeout(() => {
+    checkAndTriggerEventEmails();
+}, 5000);
 
 // Log all upcoming events on startup
 console.log('\n📅 Flash Sale Email Schedule (auto-fires 9 AM IST, 1 day before each):');

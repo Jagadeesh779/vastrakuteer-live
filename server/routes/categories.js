@@ -46,19 +46,24 @@ router.post('/', async (req, res) => {
 // @access  Admin
 router.put('/:id', async (req, res) => {
     try {
-        if (!isConnected()) {
-            const category = updateCategory(req.params.id, req.body);
-            if (!category) return res.status(404).json({ msg: 'Category not found' });
-            return res.json(category);
-        }
-        let category = await Category.findById(req.params.id);
-        if (!category) return res.status(404).json({ msg: 'Category not found' });
+        let updatedCategory = null;
 
-        category = await Category.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true });
-        res.json(category);
+        if (isConnected() && mongoose.Types.ObjectId.isValid(req.params.id)) {
+            updatedCategory = await Category.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true });
+        }
+
+        if (!updatedCategory) {
+            updatedCategory = updateCategory(req.params.id, req.body);
+        }
+
+        if (!updatedCategory) {
+            return res.status(404).json({ msg: 'Category not found' });
+        }
+
+        res.json(updatedCategory);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).json({ message: err.message || 'Server Error' });
     }
 });
 
@@ -67,19 +72,23 @@ router.put('/:id', async (req, res) => {
 // @access  Admin
 router.delete('/:id', async (req, res) => {
     try {
-        if (!isConnected()) {
-            const success = deleteCategory(req.params.id);
-            if (!success) return res.status(404).json({ msg: 'Category not found' });
+        let deleted = false;
+
+        if (isConnected() && mongoose.Types.ObjectId.isValid(req.params.id)) {
+            const category = await Category.findByIdAndDelete(req.params.id);
+            if (category) deleted = true;
+        }
+
+        const jsonDeleted = deleteCategory(req.params.id);
+        if (jsonDeleted) deleted = true;
+
+        if (deleted) {
             return res.json({ msg: 'Category removed' });
         }
-        let category = await Category.findById(req.params.id);
-        if (!category) return res.status(404).json({ msg: 'Category not found' });
-
-        await Category.findByIdAndDelete(req.params.id);
-        res.json({ msg: 'Category removed' });
+        res.status(404).json({ msg: 'Category not found' });
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).json({ message: err.message || 'Server Error' });
     }
 });
 

@@ -41,7 +41,7 @@ const Cart = () => {
     const discountAmount = Math.round((total * discount) / 100);
     const grandTotal = Math.max(0, total - discountAmount);
     // Free shipping threshold is evaluated on Cart Subtotal (total) so applying coupons never revokes free shipping
-    const shippingFee = (total > 0 && total < 2999) ? 149 : 0;
+    const shippingFee = (total > 0 && total < 2999) ? 159 : 0;
     const finalTotal = grandTotal + shippingFee;
 
     const COUPONS = { 
@@ -300,12 +300,17 @@ const Cart = () => {
                                 </div>
                             )}
                             {shippingFee > 0 ? (
-                                <div className="flex justify-between items-center text-sm text-gray-600 mb-1">
-                                    <span>Shipping</span><span>+ ₹{shippingFee}</span>
+                                <div className="mb-2">
+                                    <div className="flex justify-between items-center text-sm text-gray-600 mb-0.5">
+                                        <span>Shipping Charge</span><span>+ ₹{shippingFee}</span>
+                                    </div>
+                                    <p className="text-xs text-vastra-teal font-medium">
+                                        🚚 Add ₹{2999 - total} more to get <strong>FREE Shipping</strong>!
+                                    </p>
                                 </div>
                             ) : (
-                                <div className="flex justify-between items-center text-sm text-green-600 mb-1">
-                                    <span>Shipping</span><span>Free</span>
+                                <div className="flex justify-between items-center text-sm text-green-600 font-semibold mb-1">
+                                    <span>Shipping Charge</span><span>FREE 🚚</span>
                                 </div>
                             )}
                             <div className="flex justify-between items-center mb-6 border-t pt-2 mt-2">

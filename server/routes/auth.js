@@ -215,14 +215,17 @@ router.post('/register', async (req, res) => {
             }
 
             const savedUser = saveUser(user);
-            // Send welcome email
-            await sendWelcomeEmail(fullName, email);
+            // Send welcome email asynchronously without blocking registration response
+            sendWelcomeEmail(fullName, email).catch(err => console.error('Welcome email error:', err));
             sendTokenResponse(savedUser, 201, res, 'User registered successfully (Local Mode)', true);
             return;
         }
 
         // MongoDB Logic
         let user = await User.findOne({ email });
+        if (!user) {
+            user = findUserByEmail(email);
+        }
         if (user) {
             return res.status(400).json({ message: 'User already exists' });
         }
@@ -238,13 +241,13 @@ router.post('/register', async (req, res) => {
             }
         }
 
-        // Send welcome email
-        await sendWelcomeEmail(fullName, email);
+        // Send welcome email asynchronously without blocking registration response
+        sendWelcomeEmail(fullName, email).catch(err => console.error('Welcome email error:', err));
         sendTokenResponse(user, 201, res, 'User registered successfully', true);
 
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
+        console.error('Registration error:', err.message);
+        res.status(500).json({ message: err.message || 'Server Error' });
     }
 });
 
@@ -254,41 +257,35 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
-        if (mongoose.connection.readyState !== 1) {
-            logDebug(`[LOGIN] Using JSON DB. Email: ${email}`);
-            if (email === 'admin@vastrakuteer.com' && password === 'admin123') {
-                const adminUser = { _id: 'mock-admin-id', fullName: 'Vastra Admin', email, role: 'admin' };
-                sendTokenResponse(adminUser, 200, res, 'Admin Login successful (Mock)');
-                return;
-            }
-            const user = findUserByEmail(email);
-            if (!user || user.password !== password) {
-                return res.status(400).json({ message: 'Invalid Credentials' });
-            }
-            sendTokenResponse(user, 200, res, 'Login successful (Local Mode)');
-            return;
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Please enter both email and password' });
         }
 
-        // MongoDB Logic
+        // Special static admin login
         if (email === 'admin@vastrakuteer.com' && password === 'admin123') {
-            let adminUser = await User.findOne({ email });
-            if (!adminUser) {
-                adminUser = new User({ fullName: 'Vastra Admin', email, password, role: 'admin' });
-                await adminUser.save();
-            }
-            sendTokenResponse(adminUser, 200, res, 'Admin Login successful');
-            return;
+            const adminUser = { _id: 'mock-admin-id', fullName: 'Vastra Admin', email, role: 'admin' };
+            return sendTokenResponse(adminUser, 200, res, 'Admin Login successful');
         }
 
-        let user = await User.findOne({ email });
-        if (!user || user.password !== password) {
-            return res.status(400).json({ message: 'Invalid Credentials' });
+        let user = null;
+
+        if (mongoose.connection.readyState === 1) {
+            user = await User.findOne({ email });
         }
+
+        if (!user) {
+            user = findUserByEmail(email);
+        }
+
+        if (!user || user.password !== password) {
+            return res.status(400).json({ message: 'Invalid Email or Password' });
+        }
+
         sendTokenResponse(user, 200, res, 'Login successful');
 
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
+        console.error('Login error:', err);
+        res.status(500).json({ message: 'Server Error' });
     }
 });
 
@@ -661,41 +658,61 @@ router.get('/me', auth, async (req, res) => {
 // @access  Admin
 router.get('/users', admin, async (req, res) => {
     try {
-        let users;
-        if (mongoose.connection.readyState !== 1) {
-            users = getAllUsers();
-        } else {
-            users = await User.find().select('-password');
+        const usersMap = new Map();
+
+        // 1. Fetch from MongoDB if connected
+        if (mongoose.connection.readyState === 1) {
+            try {
+                const mongoUsers = await User.find().select('-password');
+                mongoUsers.forEach(u => {
+                    const obj = u.toObject ? u.toObject() : u;
+                    if (obj.email) usersMap.set(obj.email.toLowerCase(), obj);
+                });
+            } catch (e) {
+                console.error('Error fetching Mongo users:', e);
+            }
         }
 
-        // Strip passwords for JSON DB users (Mongo query already excludes them)
-        const safeUsers = users.map(user => {
-            const u = user.toObject ? user.toObject() : user;
-            const { password, ...rest } = u;
-            return rest;
-        });
+        // 2. Fetch from JSON DB fallback
+        try {
+            const jsonUsers = getAllUsers();
+            jsonUsers.forEach(user => {
+                const { password, ...rest } = user;
+                if (rest.email && !usersMap.has(rest.email.toLowerCase())) {
+                    usersMap.set(rest.email.toLowerCase(), rest);
+                }
+            });
+        } catch (e) {
+            console.error('Error fetching JSON users:', e);
+        }
 
+        const safeUsers = Array.from(usersMap.values());
         res.json(safeUsers);
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).json({ message: 'Server Error' });
     }
 });
 
 // @route   DELETE /api/auth/users/:id
 // @desc    Delete a user by ID (admin only)
 // @access  Admin
-router.delete('/users/:id', admin, (req, res) => {
+router.delete('/users/:id', admin, async (req, res) => {
     try {
         const { id } = req.params;
         if (id === 'admin_static_id') {
             return res.status(400).json({ message: 'Cannot delete the main admin account' });
         }
+
+        if (mongoose.connection.readyState === 1 && mongoose.Types.ObjectId.isValid(id)) {
+            await User.findByIdAndDelete(id);
+        }
+
         const remaining = deleteUserById(id);
-        res.json({ message: 'User deleted', remaining: remaining.length });
+        res.json({ message: 'User deleted', remaining: remaining ? remaining.length : 0 });
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).json({ message: err.message || 'Server Error' });
     }
 });
 

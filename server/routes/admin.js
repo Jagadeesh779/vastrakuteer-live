@@ -88,30 +88,30 @@ router.post('/send-email', admin, async (req, res) => {
 // POST /api/admin/duplicate-product/:id — Clone a product
 router.post('/duplicate-product/:id', admin, async (req, res) => {
     try {
-        if (!isConnected()) {
-            // JSON DB fallback
-            const products = getProducts();
-            const original = products.find(p => p._id === req.params.id);
-            if (!original) return res.status(404).json({ error: 'Product not found' });
-            const clone = {
-                ...original,
-                _id: Date.now().toString(),
-                name: original.name + ' (Copy)',
-                createdAt: new Date().toISOString()
-            };
-            saveProduct(clone);
-            return res.json(clone);
+        if (isConnected() && mongoose.Types.ObjectId.isValid(req.params.id)) {
+            const original = await Product.findById(req.params.id).lean();
+            if (original) {
+                delete original._id;
+                delete original.__v;
+                original.name = original.name + ' (Copy)';
+                original.createdAt = new Date();
+                const clone = await Product.create(original);
+                return res.json(clone);
+            }
         }
 
-        // MongoDB mode
-        const original = await Product.findById(req.params.id).lean();
+        // JSON DB fallback (for mock/seeded items or non-object IDs)
+        const products = getProducts();
+        const original = products.find(p => p._id === req.params.id);
         if (!original) return res.status(404).json({ error: 'Product not found' });
-        delete original._id;
-        delete original.__v;
-        original.name = original.name + ' (Copy)';
-        original.createdAt = new Date();
-        const clone = await Product.create(original);
-        res.json(clone);
+        const clone = {
+            ...original,
+            _id: Date.now().toString(),
+            name: original.name + ' (Copy)',
+            createdAt: new Date().toISOString()
+        };
+        saveProduct(clone);
+        return res.json(clone);
     } catch (err) {
         console.error('Duplicate product error:', err);
         res.status(500).json({ error: err.message });

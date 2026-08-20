@@ -29,24 +29,20 @@ router.get('/', async (req, res) => {
 // @access  Public
 router.get('/:id', async (req, res) => {
     try {
-        if (!isConnected()) {
-            // Mock support for get by ID
+        if (!isConnected() || !mongoose.Types.ObjectId.isValid(req.params.id)) {
             const products = getProducts();
             const product = products.find(p => p._id === req.params.id);
-            if (!product) return res.status(404).json({ msg: 'Product not found' });
-            return res.json(product);
+            if (product) return res.json(product);
+            if (!isConnected()) return res.status(404).json({ message: 'Product not found' });
         }
         const product = await Product.findById(req.params.id);
         if (!product) {
-            return res.status(404).json({ msg: 'Product not found' });
+            return res.status(404).json({ message: 'Product not found' });
         }
         res.json(product);
     } catch (err) {
         console.error(err.message);
-        if (err.kind === 'ObjectId') {
-            return res.status(404).json({ msg: 'Product not found' });
-        }
-        res.status(500).send('Server Error');
+        res.status(500).json({ message: 'Server Error' });
     }
 });
 
@@ -84,27 +80,29 @@ router.put('/:id', admin, async (req, res) => {
         if (req.body.sizes) {
             const newCount = Object.values(req.body.sizes)
                 .reduce((acc, v) => acc + Math.max(0, Number(v) || 0), 0);
-            // Always derive count from sizes (unless sizes sum to 0 — e.g. Saree with no size entries)
             if (newCount > 0 || Object.keys(req.body.sizes).length > 0) {
                 req.body.count = newCount;
             }
         }
-        // Auto-flip isSoldOut based on final count (admin can still override by sending isSoldOut explicitly)
         if (req.body.isSoldOut === undefined && req.body.count !== undefined) {
             req.body.isSoldOut = Number(req.body.count) <= 0;
         }
-        // ─────────────────────────────────────────────────────────────────
 
-        if (!isConnected()) {
-            const product = updateProduct(req.params.id, req.body);
-            if (!product) return res.status(404).json({ msg: 'Product not found' });
-            return res.json(product);
+        let updatedProduct = null;
+
+        if (isConnected() && mongoose.Types.ObjectId.isValid(req.params.id)) {
+            updatedProduct = await Product.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true });
         }
-        let product = await Product.findById(req.params.id);
-        if (!product) return res.status(404).json({ msg: 'Product not found' });
 
-        product = await Product.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true });
-        res.json(product);
+        if (!updatedProduct) {
+            updatedProduct = updateProduct(req.params.id, req.body);
+        }
+
+        if (!updatedProduct) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        res.json(updatedProduct);
     } catch (err) {
         console.error('Update product error:', err.message);
         res.status(400).json({ message: err.message || 'Error updating product' });
@@ -117,19 +115,23 @@ router.put('/:id', admin, async (req, res) => {
 // @access  Admin (Protected)
 router.delete('/:id', admin, async (req, res) => {
     try {
-        if (!isConnected()) {
-            const success = deleteProduct(req.params.id);
-            if (!success) return res.status(404).json({ msg: 'Product not found' });
+        let deleted = false;
+
+        if (isConnected() && mongoose.Types.ObjectId.isValid(req.params.id)) {
+            const product = await Product.findByIdAndDelete(req.params.id);
+            if (product) deleted = true;
+        }
+
+        const jsonDeleted = deleteProduct(req.params.id);
+        if (jsonDeleted) deleted = true;
+
+        if (deleted) {
             return res.json({ msg: 'Product removed' });
         }
-        let product = await Product.findById(req.params.id);
-        if (!product) return res.status(404).json({ msg: 'Product not found' });
-
-        await Product.findByIdAndDelete(req.params.id);
-        res.json({ msg: 'Product removed' });
+        res.status(404).json({ message: 'Product not found' });
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
+        console.error('Delete product error:', err.message);
+        res.status(500).json({ message: err.message || 'Server Error' });
     }
 });
 

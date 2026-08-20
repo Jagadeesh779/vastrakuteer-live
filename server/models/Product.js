@@ -93,7 +93,8 @@ const productSchema = new mongoose.Schema({
         L: { type: Number, default: 0 },
         XL: { type: Number, default: 0 },
         XXL: { type: Number, default: 0 },
-        XXXL: { type: Number, default: 0 }
+        XXXL: { type: Number, default: 0 },
+        Saree: { type: Number, default: 0 }
     },
     reviewsList: [{
         user: String,

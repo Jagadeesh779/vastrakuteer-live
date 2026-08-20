@@ -83,7 +83,7 @@ const ShippingPolicy = () => {
                         <div>
                             <h2 className="text-2xl font-serif font-bold text-gray-900 mb-4">3. Shipping Charges</h2>
                             <p className="text-gray-600 mb-4 leading-relaxed">
-                                We offer <span className="text-vastra-teal font-bold uppercase tracking-wider">Free Shipping</span> on all prepaid orders above ₹2,999 across India. For orders below this amount, a flat shipping fee of ₹149 will be applied at checkout.
+                                We offer <span className="text-vastra-teal font-bold uppercase tracking-wider">Free Shipping</span> on all prepaid orders above ₹2,999 across India. For orders below this amount, a flat shipping fee of ₹159 will be applied at checkout.
                             </p>
                         </div>
                     </div>
